@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_location"
+        android:icon="@drawable/ic_inventory"
+        android:title="Locations"/>
+    <item
+        android:id="@+id/nav_cart"
+        android:icon="@drawable/ic_inventory"
+        android:title="Cart"/>
+    <item
+        android:id="@+id/nav_orders"
+        android:icon="@drawable/ic_inventory"
+        android:title="Orders"/>
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_inventory"
+        android:title="Profile"/>
+</menu>
