@@ -18,7 +18,7 @@
         <activity android:name=".login.ResetPasswordActivity"/>
         <activity android:name=".login.RegisterActivity"/>
         <activity android:name=".shopkeeper.ShopkeeperDashboardActivity" />
-        <activity android:name=".buyer.BuyerDashboardActivity" />
+        <activity android:name="com.example.gallimart.buyer.BuyerDashboardActivity" />
         <activity android:name=".driver.DriverDashboardActivity" />
 
         <activity android:name=".login.LoginActivity"

@@ -10,6 +10,7 @@ public class SessionManager {
     private static final String KEY_USER_NAME = "userName";
     private static final String KEY_USER_EMAIL = "userEmail";
     private static final String KEY_USER_ROLE = "userRole";
+    private static final String KEY_SHOP_ID = "shopId"; // New key for shopId
 
     private SharedPreferences prefs;
     private SharedPreferences.Editor editor;
@@ -26,6 +27,17 @@ public class SessionManager {
         editor.putString(KEY_USER_EMAIL, email);
         editor.putString(KEY_USER_ROLE, role);
         editor.apply();
+    }
+
+    // Save shopId
+    public void setShopId(String shopId) {
+        editor.putString(KEY_SHOP_ID, shopId);
+        editor.apply();
+    }
+
+    // Get shopId
+    public String getShopId() {
+        return prefs.getString(KEY_SHOP_ID, null); // null if not set
     }
 
     public boolean isLoggedIn() {

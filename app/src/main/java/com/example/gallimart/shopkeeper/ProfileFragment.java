@@ -99,14 +99,24 @@ public class ProfileFragment extends Fragment {
         btnSaveLocation.setOnClickListener(v -> {
             if (currentPoint != null) {
                 DatabaseReference ref = FirebaseDatabase.getInstance().getReference("shops")
-                        .child(sessionManager.getUserName());
+                        .child(sessionManager.getUserName()); // or .child(shopId) if you want UID as key
+
+                String shopId = sessionManager.getShopId(); // make sure you have this saved in session
+                if(shopId == null) {
+                    shopId = ref.push().getKey(); // generate a unique key if none
+                    sessionManager.setShopId(shopId); // save in session for future
+                }
+
                 ref.child("name").setValue(sessionManager.getUserName());
                 ref.child("email").setValue(sessionManager.getUserEmail());
                 ref.child("lat").setValue(currentPoint.getLatitude());
                 ref.child("lng").setValue(currentPoint.getLongitude());
+                ref.child("shopId").setValue(shopId); // <-- save shopId here
+
                 Toast.makeText(getContext(), "Shop location saved!", Toast.LENGTH_SHORT).show();
             }
         });
+
 
         return view;
     }

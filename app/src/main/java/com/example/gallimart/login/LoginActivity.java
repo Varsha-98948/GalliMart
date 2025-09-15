@@ -121,7 +121,10 @@ public class LoginActivity extends AppCompatActivity {
         } else if ("Driver".equalsIgnoreCase(role)) {
             startActivity(new Intent(this, DriverDashboardActivity.class));
         } else {
-            startActivity(new Intent(this, BuyerDashboardActivity.class));
+            Intent intent = new Intent();
+            intent.setClassName("com.example.gallimart", "com.example.gallimart.buyer.BuyerDashboardActivity");
+            startActivity(intent);
+
         }
     }
 }
