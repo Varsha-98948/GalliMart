@@ -34,6 +34,7 @@ public class ShopListFragment extends Fragment implements ShopAdapter.OnShopClic
         adapter = new ShopAdapter(shopList, this);
         recyclerView.setAdapter(adapter);
 
+        // now reads from /shops
         firebaseRef = FirebaseDatabase.getInstance().getReference("shops");
         fetchShopsFromFirebase();
 
@@ -47,7 +48,20 @@ public class ShopListFragment extends Fragment implements ShopAdapter.OnShopClic
                 shopList.clear();
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     Shop shop = ds.getValue(Shop.class);
-                    if (shop != null) shopList.add(shop);
+                    if (shop != null) {
+                        // optional: make sure we set the key as shopId if not in object
+                        if (shop.getShopId() == null) {
+                            // fallback: take key as shopId
+                            shop = new Shop(
+                                    ds.getKey(),
+                                    shop.getName(),
+                                    shop.getEmail(),
+                                    shop.getLat(),
+                                    shop.getLng()
+                            );
+                        }
+                        shopList.add(shop);
+                    }
                 }
                 adapter.notifyDataSetChanged();
             }
@@ -63,7 +77,8 @@ public class ShopListFragment extends Fragment implements ShopAdapter.OnShopClic
 
     @Override
     public void onShopClick(Shop shop) {
-        InventoryFragment fragment = InventoryFragment.newInstance(shop.getId());
+        // pass shopId to InventoryFragment
+        InventoryFragment fragment = InventoryFragment.newInstance(shop.getShopId());
         getParentFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)

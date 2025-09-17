@@ -92,12 +92,12 @@ public class LocationFragment extends Fragment {
                 shopList.clear();
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     Shop shop = ds.getValue(Shop.class);
-                    if(shop != null && shop.getLatitude() != null && shop.getLongitude() != null) {
+                    if(shop != null && shop.getLat() != 0 && shop.getLng() != 0) {
                         Location shopLoc = new Location("");
-                        shopLoc.setLatitude(shop.getLatitude());
-                        shopLoc.setLongitude(shop.getLongitude());
+                        shopLoc.setLatitude(shop.getLat());
+                        shopLoc.setLongitude(shop.getLng());
 
-                        float distanceKm = buyerLocation.distanceTo(shopLoc)/1000f; // meters → km
+                        double distanceKm = buyerLocation.distanceTo(shopLoc)/1000f; // meters → km
                         if(distanceKm <= MAX_DISTANCE_KM){
                             shop.setDistance(distanceKm);
                             shopList.add(shop);

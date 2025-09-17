@@ -24,7 +24,7 @@ public class BuyerDashboardActivity extends AppCompatActivity {
                 replaceFragment(new ShopListFragment());
                 return true;
             } else if (id == R.id.nav_cart) {
-                Toast.makeText(this, "Cart clicked", Toast.LENGTH_SHORT).show();
+                replaceFragment(new CartFragment()); // Load the ProfileFragment here
                 return true;
             } else if (id == R.id.nav_profile) {
                 replaceFragment(new ProfileFragment()); // Load the ProfileFragment here

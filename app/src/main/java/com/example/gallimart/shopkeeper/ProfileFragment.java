@@ -98,20 +98,27 @@ public class ProfileFragment extends Fragment {
 
         btnSaveLocation.setOnClickListener(v -> {
             if (currentPoint != null) {
-                DatabaseReference ref = FirebaseDatabase.getInstance().getReference("shops")
-                        .child(sessionManager.getUserName()); // or .child(shopId) if you want UID as key
+                // Always try to get the saved shopId first
+                String shopId = sessionManager.getShopId();
 
-                String shopId = sessionManager.getShopId(); // make sure you have this saved in session
-                if(shopId == null) {
-                    shopId = ref.push().getKey(); // generate a unique key if none
-                    sessionManager.setShopId(shopId); // save in session for future
+                // If shopId is not yet saved, create one now and store it in session
+                if (shopId == null || shopId.isEmpty()) {
+                    // for example: use FirebaseAuth UID or push key
+                    shopId = FirebaseDatabase.getInstance().getReference("shops").push().getKey();
+                    sessionManager.setShopId(shopId);
                 }
 
-                ref.child("name").setValue(sessionManager.getUserName());
-                ref.child("email").setValue(sessionManager.getUserEmail());
-                ref.child("lat").setValue(currentPoint.getLatitude());
-                ref.child("lng").setValue(currentPoint.getLongitude());
-                ref.child("shopId").setValue(shopId); // <-- save shopId here
+                // Now ALWAYS write to shops/<shopId>
+                DatabaseReference shopRef = FirebaseDatabase.getInstance()
+                        .getReference("shops")
+                        .child(shopId);
+
+                // Save the shop’s basic details
+                shopRef.child("name").setValue(sessionManager.getUserName());
+                shopRef.child("email").setValue(sessionManager.getUserEmail());
+                shopRef.child("lat").setValue(currentPoint.getLatitude());
+                shopRef.child("lng").setValue(currentPoint.getLongitude());
+                shopRef.child("shopId").setValue(shopId);
 
                 Toast.makeText(getContext(), "Shop location saved!", Toast.LENGTH_SHORT).show();
             }

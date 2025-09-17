@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -14,7 +15,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gallimart.R;
 import com.example.gallimart.SessionManager;
-import com.google.firebase.database.*;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +32,11 @@ public class InventoryFragment extends Fragment {
     private String shopId;
     private RecyclerView recyclerView;
     private InventoryAdapter adapter;
-    private List<Item> itemList = new ArrayList<>();
+    private final List<Item> itemList = new ArrayList<>();
     private DatabaseReference firebaseRef;
 
-    // Create a new instance and pass the shopId (optional)
+    private ImageButton btnViewCart; // Floating cart button
+
     public static InventoryFragment newInstance(String shopId) {
         InventoryFragment fragment = new InventoryFragment();
         Bundle args = new Bundle();
@@ -41,13 +48,10 @@ public class InventoryFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Try to get shopId from arguments
         if (getArguments() != null) {
             shopId = getArguments().getString(ARG_SHOP_ID);
         }
 
-        // Fallback: get shopId from SessionManager
         if (shopId == null) {
             SessionManager session = new SessionManager(requireContext());
             shopId = session.getShopId();
@@ -64,23 +68,60 @@ public class InventoryFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recyclerViewInventory);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new InventoryAdapter(itemList);
+
+        adapter = new InventoryAdapter(itemList, this);
         recyclerView.setAdapter(adapter);
 
-        if (shopId == null) {
-            Toast.makeText(getContext(), "Shop ID not found!", Toast.LENGTH_SHORT).show();
-            return view;
+        btnViewCart = view.findViewById(R.id.btnViewCart);
+        btnViewCart.setOnClickListener(v -> openCartFragment());
+
+        if (shopId != null) {
+            setupFirebaseAndFetch(shopId);
+        } else {
+            fetchShopIdFromUser();
         }
 
-        // Firebase reference: /shops/{shopId}/items
+        return view;
+    }
+
+    private void fetchShopIdFromUser() {
+        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
+                : null;
+        if (uid == null) {
+            Toast.makeText(getContext(), "User not signed in and no shopId provided", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        DatabaseReference userRef = FirebaseDatabase.getInstance()
+                .getReference("users")
+                .child(uid)
+                .child("shopId");
+
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                shopId = snapshot.getValue(String.class);
+                if (shopId != null) {
+                    setupFirebaseAndFetch(shopId);
+                } else {
+                    Toast.makeText(getContext(), "No shopId found for this user", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(getContext(), "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setupFirebaseAndFetch(String shopId) {
         firebaseRef = FirebaseDatabase.getInstance()
                 .getReference("shops")
                 .child(shopId)
                 .child("items");
-
         fetchItemsFromFirebase();
-
-        return view;
     }
 
     private void fetchItemsFromFirebase() {
@@ -102,5 +143,22 @@ public class InventoryFragment extends Fragment {
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    public void openCartFragment() {
+        CartFragment cartFragment = new CartFragment();
+        getParentFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, cartFragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    public void showItemAddedPopup(String itemName) {
+        Toast.makeText(getContext(), itemName + " added to cart", Toast.LENGTH_SHORT).show();
+    }
+
+    public InventoryAdapter getAdapter() {
+        return adapter;
     }
 }

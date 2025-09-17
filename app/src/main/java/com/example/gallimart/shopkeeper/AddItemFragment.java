@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.gallimart.InventoryItem;
 import com.example.gallimart.R;
+import com.example.gallimart.SessionManager;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -31,7 +32,7 @@ public class AddItemFragment extends Fragment {
     private ImageView ivPreview;
     private Uri selectedImage;
     private DatabaseReference firebaseRef;
-
+    private String shopId;
     private String supabaseUrl = "https://yxzgowwvyhugzgjiypbk.supabase.co";
     private String bucketName = "uploads";
     private String supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4emdvd3d2eWh1Z3pnaml5cGJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1ODc5NjYsImV4cCI6MjA3MzE2Mzk2Nn0.K694SUdB5djvZvn9QdAr1ZwfgpxBudyDekXCouz4_Y0";
@@ -49,7 +50,19 @@ public class AddItemFragment extends Fragment {
         etDescription = view.findViewById(R.id.etDescription);
         ivPreview = view.findViewById(R.id.ivPreview);
 
-        firebaseRef = FirebaseDatabase.getInstance().getReference("items");
+        // get shopId from SessionManager or arguments
+        SessionManager sm = new SessionManager(requireContext());
+        shopId = sm.getShopId();
+
+        if (shopId == null) {
+            Toast.makeText(getContext(), "No shopId found", Toast.LENGTH_SHORT).show();
+        } else {
+            // point to /shops/{shopId}/items
+            firebaseRef = FirebaseDatabase.getInstance()
+                    .getReference("shops")
+                    .child(shopId)
+                    .child("items");
+        }
 
         Button btnChooseImage = view.findViewById(R.id.btnChooseImage);
         btnChooseImage.setOnClickListener(v -> pickImage());
@@ -59,6 +72,7 @@ public class AddItemFragment extends Fragment {
 
         return view;
     }
+
 
     private void pickImage() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -94,9 +108,15 @@ public class AddItemFragment extends Fragment {
     }
 
     private void uploadImageToSupabase(String name, double price, int quantity, String desc) {
+        if (firebaseRef == null) {
+            Toast.makeText(getContext(), "ShopId missing. Save shop first.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         try {
             String fileName = UUID.randomUUID() + ".jpg";
-            InputStream inputStream = getContext().getContentResolver().openInputStream(selectedImage);
+            InputStream inputStream = requireContext().getContentResolver().openInputStream(selectedImage);
+
             byte[] bytes = new byte[inputStream.available()];
             inputStream.read(bytes);
             inputStream.close();
@@ -123,8 +143,10 @@ public class AddItemFragment extends Fragment {
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                     if (response.isSuccessful()) {
+                        // public URL to show in app
                         String imageUrl = supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;
 
+                        // add the item to Firebase under /shops/<shopId>/items/<itemId>
                         String id = firebaseRef.push().getKey();
                         InventoryItem item = new InventoryItem(id, name, price, quantity, desc, imageUrl);
                         firebaseRef.child(id).setValue(item);

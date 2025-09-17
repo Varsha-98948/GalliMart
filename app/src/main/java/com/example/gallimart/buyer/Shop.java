@@ -1,30 +1,33 @@
 package com.example.gallimart.buyer;
 
 public class Shop {
-    private String id;
+    private String shopId;
     private String name;
-    private Double latitude;
-    private Double longitude;
-    private Float distance; // Add this field for distance in km
+    private String email;
+    private double lat = 0;
+    private double lng = 0;
+    private double distance;
 
-    public Shop() {} // Required for Firebase
+    public Shop() {} // empty for Firebase
 
-    public Shop(String id, String name, Double latitude, Double longitude) {
-        this.id = id;
+    public Shop(String shopId, String name, String email, double lat, double lng) {
+        this.shopId = shopId;
         this.name = name;
-        this.latitude = latitude;
-        this.longitude = longitude;
+        this.email = email;
+        this.lat = lat;
+        this.lng = lng;
     }
 
-    public String getId() { return id; }
+    public String getShopId() { return shopId; }
     public String getName() { return name; }
-    public Double getLatitude() { return latitude; }
-    public Double getLongitude() { return longitude; }
-    public Float getDistance() { return distance; }
+    public String getEmail() { return email; }
+    public double getLat() { return lat; }
+    public double getLng() { return lng; }
+    public double getDistance() { return distance; }
 
-    public void setId(String id) { this.id = id; }
+    public void setId(String id) { this.shopId = id; }
     public void setName(String name) { this.name = name; }
-    public void setLatitude(Double latitude) { this.latitude = latitude; }
-    public void setLongitude(Double longitude) { this.longitude = longitude; }
-    public void setDistance(Float distance) { this.distance = distance; }
+    public void setLatitude(Double latitude) { this.lat = latitude; }
+    public void setLongitude(Double longitude) { this.lng = longitude; }
+    public void setDistance(Double distance) { this.distance = distance; }
 }
