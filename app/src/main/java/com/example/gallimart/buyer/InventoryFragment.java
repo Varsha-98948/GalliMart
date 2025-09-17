@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gallimart.R;
+import com.example.gallimart.SessionManager;
 import com.google.firebase.database.*;
 
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public class InventoryFragment extends Fragment {
     private List<Item> itemList = new ArrayList<>();
     private DatabaseReference firebaseRef;
 
-    // Create a new instance and pass the shopId
+    // Create a new instance and pass the shopId (optional)
     public static InventoryFragment newInstance(String shopId) {
         InventoryFragment fragment = new InventoryFragment();
         Bundle args = new Bundle();
@@ -40,8 +41,16 @@ public class InventoryFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Try to get shopId from arguments
         if (getArguments() != null) {
             shopId = getArguments().getString(ARG_SHOP_ID);
+        }
+
+        // Fallback: get shopId from SessionManager
+        if (shopId == null) {
+            SessionManager session = new SessionManager(requireContext());
+            shopId = session.getShopId();
         }
     }
 
@@ -59,7 +68,7 @@ public class InventoryFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         if (shopId == null) {
-            Toast.makeText(getContext(), "Shop ID not provided!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Shop ID not found!", Toast.LENGTH_SHORT).show();
             return view;
         }
 
