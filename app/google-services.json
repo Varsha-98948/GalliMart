@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "629076363753",
+    "project_id": "gallimart",
+    "storage_bucket": "gallimart.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:629076363753:android:e2401a1c27d27acf69e378",
+        "android_client_info": {
+          "package_name": "com.example.gallimart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-qU9ykzoa31ySizLluXmiJcca21hKkB4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

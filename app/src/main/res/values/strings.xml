@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">GalliMart</string>
+    <string-array name="roles_array">
+        <item>Buyer</item>
+        <item>Shopkeeper</item>
+        <item>Driver</item>
+    </string-array>
+
+</resources>
