@@ -4,25 +4,27 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.gallimart.R;
+import com.example.gallimart.SessionManager;
 
 import java.util.List;
-import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
 
-    private final List<Item> items;
-    private final Map<String, Integer> cartQuantities;
-    private final Runnable onQuantityChanged;
+    private final List<SessionManager.CartItem> cartItems;
+    private final BiConsumer<SessionManager.CartItem, Integer> onQuantityChanged;
 
-    public CartAdapter(List<Item> items, Map<String, Integer> cartQuantities, Runnable onQuantityChanged) {
-        this.items = items;
-        this.cartQuantities = cartQuantities;
+    public CartAdapter(List<SessionManager.CartItem> cartItems,
+                       BiConsumer<SessionManager.CartItem, Integer> onQuantityChanged) {
+        this.cartItems = cartItems;
         this.onQuantityChanged = onQuantityChanged;
     }
 
@@ -36,47 +38,50 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull CartViewHolder holder, int position) {
-        Item item = items.get(position);
-        int qty = cartQuantities.getOrDefault(item.getId(), 0);
+        SessionManager.CartItem item = cartItems.get(position);
 
-        holder.tvItemName.setText(item.getName());
-        holder.tvItemPrice.setText("₹" + item.getPrice());
-        holder.tvQuantity.setText(String.valueOf(qty));
+        holder.tvName.setText(item.name);
+        holder.tvPrice.setText("₹" + item.price);
+        holder.tvQuantity.setText(String.valueOf(item.quantity));
 
-        holder.btnPlus.setOnClickListener(v -> {
-            int newQty = cartQuantities.getOrDefault(item.getId(), 0) + 1;
-            cartQuantities.put(item.getId(), newQty);
-            holder.tvQuantity.setText(String.valueOf(newQty));
-            onQuantityChanged.run();
+        // Load image
+        if (item.imageUrl != null && !item.imageUrl.isEmpty()) {
+            Glide.with(holder.itemView.getContext())
+                    .load(item.imageUrl)
+                    .into(holder.ivImage);
+        } else {
+            holder.ivImage.setImageResource(R.drawable.ic_inventory);
+        }
+
+        holder.btnIncrease.setOnClickListener(v -> {
+            int newQty = item.quantity + 1;
+            onQuantityChanged.accept(item, newQty);
         });
 
-        holder.btnMinus.setOnClickListener(v -> {
-            int currentQty = cartQuantities.getOrDefault(item.getId(), 0);
-            if (currentQty > 0) {
-                currentQty--;
-                cartQuantities.put(item.getId(), currentQty);
-                holder.tvQuantity.setText(String.valueOf(currentQty));
-                onQuantityChanged.run();
-            }
+        holder.btnDecrease.setOnClickListener(v -> {
+            int newQty = item.quantity - 1;
+            onQuantityChanged.accept(item, newQty);
         });
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return cartItems.size();
     }
 
-    static class CartViewHolder extends RecyclerView.ViewHolder {
-        TextView tvItemName, tvItemPrice, tvQuantity;
-        ImageButton btnPlus, btnMinus;
+    public static class CartViewHolder extends RecyclerView.ViewHolder {
+        TextView tvName, tvPrice, tvQuantity;
+        ImageButton btnIncrease, btnDecrease;
+        ImageView ivImage;
 
         public CartViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvItemName = itemView.findViewById(R.id.tvCartItemName);
-            tvItemPrice = itemView.findViewById(R.id.tvCartItemPrice);
-            tvQuantity = itemView.findViewById(R.id.tvCartItemQuantity);
-            btnPlus = itemView.findViewById(R.id.btnCartPlus);
-            btnMinus = itemView.findViewById(R.id.btnCartMinus);
+            tvName = itemView.findViewById(R.id.tvCartItemName);
+            tvPrice = itemView.findViewById(R.id.tvCartItemPrice);
+            tvQuantity = itemView.findViewById(R.id.tvCartQuantity);
+            btnIncrease = itemView.findViewById(R.id.btnIncreaseQty);
+            btnDecrease = itemView.findViewById(R.id.btnDecreaseQty);
+            ivImage = itemView.findViewById(R.id.ivCartItem);
         }
     }
 }

@@ -42,7 +42,7 @@ public class ProfileFragment extends Fragment {
         tvRole.setText("Driver");
 
         btnLogout.setOnClickListener(v -> {
-            sessionManager.logout();
+            sessionManager.logout(true);
             startActivity(new Intent(getContext(), LoginActivity.class));
             getActivity().finish();
         });

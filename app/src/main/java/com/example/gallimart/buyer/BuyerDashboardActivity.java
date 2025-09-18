@@ -35,6 +35,10 @@ public class BuyerDashboardActivity extends AppCompatActivity {
 
 
     }
+    public void switchToCartTab() {
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNavigation);
+        bottomNav.setSelectedItemId(R.id.nav_cart); // matches your buyer_nav_menu ID
+    }
 
     private void replaceFragment(Fragment fragment) {
         getSupportFragmentManager()

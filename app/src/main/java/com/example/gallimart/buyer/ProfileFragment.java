@@ -43,10 +43,12 @@ public class ProfileFragment extends Fragment {
         tvRole.setText("Buyer");
 
         btnLogout.setOnClickListener(v -> {
-            sessionManager.logout();
-            startActivity(new Intent(getContext(), LoginActivity.class));
-            getActivity().finish();
+            sessionManager.clearCart();  // optional, but redundant if we pass true
+            sessionManager.logout(true); // ✅ pass true to clear everything including cart
+            startActivity(new Intent(requireContext(), LoginActivity.class));
+            requireActivity().finish();
         });
+
 
         return view;
     }

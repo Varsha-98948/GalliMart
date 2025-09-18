@@ -1,36 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="8dp">
+    android:layout_height="match_parent">
 
-    <!-- RecyclerView for Inventory Items -->
+    <!-- RecyclerView for inventory items -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewInventory"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp"
         android:clipToPadding="false"
-        android:paddingBottom="8dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:scrollbars="vertical"/>
 
-    <!-- Optional: Floating Cart Button (like Swiggy) -->
+    <!-- Floating Cart Button -->
     <ImageButton
-        android:id="@+id/btnViewCart"
+        android:id="@+id/fabCart"
         android:layout_width="60dp"
         android:layout_height="60dp"
+        android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
+        android:contentDescription="Cart"
+        android:scaleType="centerInside"
+        android:padding="12dp"
         android:src="@drawable/ic_inventory"
-        android:contentDescription="View Cart"
-        app:tint="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="1.0"
-        app:layout_constraintHorizontal_bias="1.0"
-        android:elevation="8dp"/>
+        app:elevation="8dp"/>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

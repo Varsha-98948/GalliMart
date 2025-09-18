@@ -8,13 +8,12 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gallimart.R;
+import com.example.gallimart.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,23 +24,13 @@ public class CartFragment extends Fragment {
     private RecyclerView recyclerView;
     private TextView tvTotalPrice;
     private CartAdapter cartAdapter;
-    private List<Item> cartItems = new ArrayList<>();
-    private Map<String, Integer> cartQuantities;
-
-    public static CartFragment newInstance(Map<String, Integer> cartQuantities) {
-        CartFragment fragment = new CartFragment();
-        Bundle args = new Bundle();
-        args.putSerializable("cartQuantities", new java.util.HashMap<>(cartQuantities));
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private final List<SessionManager.CartItem> cartItems = new ArrayList<>();
+    private SessionManager session;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            cartQuantities = (Map<String, Integer>) getArguments().getSerializable("cartQuantities");
-        }
+        session = new SessionManager(requireContext());
     }
 
     @Nullable
@@ -55,7 +44,7 @@ public class CartFragment extends Fragment {
         tvTotalPrice = view.findViewById(R.id.tvTotalPrice);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        cartAdapter = new CartAdapter(cartItems, cartQuantities, this::updateTotalPrice);
+        cartAdapter = new CartAdapter(cartItems, this::onQuantityChanged);
         recyclerView.setAdapter(cartAdapter);
 
         loadCartItems();
@@ -66,24 +55,41 @@ public class CartFragment extends Fragment {
 
     private void loadCartItems() {
         cartItems.clear();
-        if (cartQuantities != null) {
-            for (Map.Entry<String, Integer> entry : cartQuantities.entrySet()) {
-                // For simplicity, here we create a dummy Item with the itemId
-                // In real case, you should fetch actual item details from Firebase
-                Item item = new Item(entry.getKey(), "Item Name", 100, null);
-                cartItems.add(item);
-            }
+        Map<String, SessionManager.CartItem> savedCart = session.getCart();
+        if (savedCart != null) {
+            cartItems.addAll(savedCart.values());
         }
         cartAdapter.notifyDataSetChanged();
     }
 
     private void updateTotalPrice() {
         double total = 0;
-        for (Item item : cartItems) {
-            int qty = cartQuantities.getOrDefault(item.getId(), 0);
-            total += item.getPrice() * qty;
+        for (SessionManager.CartItem item : cartItems) {
+            total += item.price * item.quantity;
         }
         tvTotalPrice.setText("Total: ₹" + total);
     }
 
+    private void onQuantityChanged(SessionManager.CartItem item, int newQuantity) {
+        Map<String, SessionManager.CartItem> cart = session.getCart();
+        if (cart == null) return;
+
+        if (newQuantity <= 0) {
+            cart.remove(item.id);
+        } else {
+            item.quantity = newQuantity;
+            cart.put(item.id, item);
+        }
+
+        session.saveCart(cart);
+        loadCartItems();
+        updateTotalPrice();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadCartItems();
+        updateTotalPrice();
+    }
 }

@@ -58,7 +58,7 @@ public class ProfileFragment extends Fragment {
         tvRole.setText("Shopkeeper");
 
         btnLogout.setOnClickListener(v -> {
-            sessionManager.logout();
+            sessionManager.logout(true);
             startActivity(new Intent(getContext(), LoginActivity.class));
             requireActivity().finish();
         });
