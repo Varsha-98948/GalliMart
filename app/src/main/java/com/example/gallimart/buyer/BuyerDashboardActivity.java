@@ -9,8 +9,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 public class BuyerDashboardActivity extends AppCompatActivity {
 
     private LocationFragment locationFragment;
-    private InventoryFragment inventoryFragment; // now can be null initially
+    private InventoryFragment inventoryFragment;
     private CartFragment cartFragment;
+    private ProfileFragment profileFragment;
     private Fragment activeFragment;
     private BottomNavigationView bottomNavigation;
 
@@ -21,12 +22,16 @@ public class BuyerDashboardActivity extends AppCompatActivity {
 
         bottomNavigation = findViewById(R.id.bottomNavigation);
 
+        // Initialize fragments
         locationFragment = new LocationFragment();
         cartFragment = new CartFragment();
+        profileFragment = new ProfileFragment();
+        // inventoryFragment = null initially
 
-        // add only location and cart initially
+        // Add only home, profile, and cart initially
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.fragment_container, locationFragment, "HOME")
+                .add(R.id.fragment_container, profileFragment, "PROFILE").hide(profileFragment)
                 .add(R.id.fragment_container, cartFragment, "CART").hide(cartFragment)
                 .commit();
 
@@ -35,10 +40,26 @@ public class BuyerDashboardActivity extends AppCompatActivity {
         bottomNavigation.setOnItemSelectedListener(item -> {
             Fragment fragmentToShow = null;
             int id = item.getItemId();
-            if (id == R.id.nav_home) fragmentToShow = locationFragment;
-            else if (id == R.id.nav_inventory) {
-                if (inventoryFragment != null) fragmentToShow = inventoryFragment;
-            } else if (id == R.id.nav_cart) fragmentToShow = cartFragment;
+
+            if (id == R.id.nav_home) {
+                fragmentToShow = locationFragment;
+            } else if (id == R.id.nav_inventory) {
+                if (inventoryFragment == null) {
+                    inventoryFragment = new InventoryFragment();
+                    getSupportFragmentManager().beginTransaction()
+                            .add(R.id.fragment_container, inventoryFragment, "INVENTORY")
+                            .hide(activeFragment)
+                            .commit();
+                    activeFragment = inventoryFragment;
+                    return true; // handled
+                } else {
+                    fragmentToShow = inventoryFragment;
+                }
+            } else if (id == R.id.nav_cart) {
+                fragmentToShow = cartFragment;
+            } else if (id == R.id.nav_profile) {
+                fragmentToShow = profileFragment;
+            }
 
             if (fragmentToShow != null && fragmentToShow != activeFragment) {
                 getSupportFragmentManager().beginTransaction()
@@ -50,6 +71,9 @@ public class BuyerDashboardActivity extends AppCompatActivity {
             return true;
         });
     }
+
+
+
 
     public void switchToCartTab() {
         bottomNavigation.setSelectedItemId(R.id.nav_cart);
