@@ -7,8 +7,11 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SessionManager {
 
@@ -23,6 +26,34 @@ public class SessionManager {
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
     private final Gson gson;
+
+    // Listener for cart changes
+    public interface CartChangeListener {
+        void onCartChanged();
+    }
+
+    // *** KEY CHANGE: shared listeners across all SessionManager instances ***
+    private static final List<CartChangeListener> cartListeners = new CopyOnWriteArrayList<>();
+
+    public void addCartChangeListener(CartChangeListener listener) {
+        if (listener != null && !cartListeners.contains(listener)) {
+            cartListeners.add(listener);
+        }
+    }
+
+    public void removeCartChangeListener(CartChangeListener listener) {
+        cartListeners.remove(listener);
+    }
+
+    private void notifyCartChanged() {
+        for (CartChangeListener l : cartListeners) {
+            try {
+                l.onCartChanged();
+            } catch (Throwable t) {
+                // swallow to avoid one faulty listener breaking others
+            }
+        }
+    }
 
     public SessionManager(Context context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
@@ -55,13 +86,26 @@ public class SessionManager {
         editor.apply();
     }
 
-    public String getUserName() { return prefs.getString(KEY_USER_NAME, "User"); }
-    public String getUserEmail() { return prefs.getString(KEY_USER_EMAIL, "user@example.com"); }
-    public String getUserRole() { return prefs.getString(KEY_USER_ROLE, "Buyer"); }
+    public String getUserName() {
+        return prefs.getString(KEY_USER_NAME, "User");
+    }
+
+    public String getUserEmail() {
+        return prefs.getString(KEY_USER_EMAIL, "user@example.com");
+    }
+
+    public String getUserRole() {
+        return prefs.getString(KEY_USER_ROLE, "Buyer");
+    }
 
     // Shop ID
-    public void setShopId(String shopId) { editor.putString(KEY_SHOP_ID, shopId).apply(); }
-    public String getShopId() { return prefs.getString(KEY_SHOP_ID, null); }
+    public void setShopId(String shopId) {
+        editor.putString(KEY_SHOP_ID, shopId).apply();
+    }
+
+    public String getShopId() {
+        return prefs.getString(KEY_SHOP_ID, null);
+    }
 
     // CartItem Model
     public static class CartItem {
@@ -72,6 +116,7 @@ public class SessionManager {
         public int quantity;
 
         public CartItem() {}
+
         public CartItem(String id, String name, double price, String imageUrl, int quantity) {
             this.id = id;
             this.name = name;
@@ -85,6 +130,7 @@ public class SessionManager {
     public void saveCart(Map<String, CartItem> cart) {
         editor.putString(KEY_CART, gson.toJson(cart));
         editor.apply();
+        notifyCartChanged();
     }
 
     public Map<String, CartItem> getCart() {
@@ -96,6 +142,7 @@ public class SessionManager {
 
     public void clearCart() {
         editor.remove(KEY_CART).apply();
+        notifyCartChanged();
     }
 
     public int getCartItemCount() {
@@ -107,19 +154,27 @@ public class SessionManager {
     public void addItemToCart(String id, String name, double price, String imageUrl) {
         Map<String, CartItem> cart = getCart();
         CartItem existing = cart.get(id);
-        if (existing != null) existing.quantity++;
-        else existing = new CartItem(id, name, price, imageUrl, 1);
-        cart.put(id, existing);
-        saveCart(cart);
+        if (existing != null) {
+            existing.quantity++;
+            cart.put(id, existing);
+        } else {
+            existing = new CartItem(id, name, price, imageUrl, 1);
+            cart.put(id, existing);
+        }
+        saveCart(cart); // triggers listeners
     }
 
     public void removeItemFromCart(String id) {
         Map<String, CartItem> cart = getCart();
         if (cart.containsKey(id)) {
             CartItem existing = cart.get(id);
-            if (existing.quantity > 1) cart.put(id, new CartItem(id, existing.name, existing.price, existing.imageUrl, existing.quantity - 1));
-            else cart.remove(id);
-            saveCart(cart);
+            if (existing.quantity > 1) {
+                existing.quantity--;
+                cart.put(id, existing);
+            } else {
+                cart.remove(id);
+            }
+            saveCart(cart); // triggers listeners
         }
     }
 }

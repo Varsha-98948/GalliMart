@@ -15,15 +15,18 @@ import com.example.gallimart.R;
 import com.example.gallimart.SessionManager;
 
 import java.util.List;
-import java.util.function.BiConsumer;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
 
+    public interface OnQuantityChangeListener {
+        void onQuantityChanged(SessionManager.CartItem item, int newQuantity);
+    }
+
     private final List<SessionManager.CartItem> cartItems;
-    private final BiConsumer<SessionManager.CartItem, Integer> onQuantityChanged;
+    private final OnQuantityChangeListener onQuantityChanged;
 
     public CartAdapter(List<SessionManager.CartItem> cartItems,
-                       BiConsumer<SessionManager.CartItem, Integer> onQuantityChanged) {
+                       OnQuantityChangeListener onQuantityChanged) {
         this.cartItems = cartItems;
         this.onQuantityChanged = onQuantityChanged;
     }
@@ -44,7 +47,6 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         holder.tvPrice.setText("₹" + item.price);
         holder.tvQuantity.setText(String.valueOf(item.quantity));
 
-        // Load image
         if (item.imageUrl != null && !item.imageUrl.isEmpty()) {
             Glide.with(holder.itemView.getContext())
                     .load(item.imageUrl)
@@ -53,15 +55,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             holder.ivImage.setImageResource(R.drawable.ic_inventory);
         }
 
-        holder.btnIncrease.setOnClickListener(v -> {
-            int newQty = item.quantity + 1;
-            onQuantityChanged.accept(item, newQty);
-        });
-
-        holder.btnDecrease.setOnClickListener(v -> {
-            int newQty = item.quantity - 1;
-            onQuantityChanged.accept(item, newQty);
-        });
+        holder.btnIncrease.setOnClickListener(v -> onQuantityChanged.onQuantityChanged(item, item.quantity + 1));
+        holder.btnDecrease.setOnClickListener(v -> onQuantityChanged.onQuantityChanged(item, item.quantity - 1));
     }
 
     @Override
@@ -69,7 +64,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         return cartItems.size();
     }
 
-    public static class CartViewHolder extends RecyclerView.ViewHolder {
+    static class CartViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvPrice, tvQuantity;
         ImageButton btnIncrease, btnDecrease;
         ImageView ivImage;

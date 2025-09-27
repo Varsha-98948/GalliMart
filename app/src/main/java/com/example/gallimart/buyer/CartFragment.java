@@ -27,10 +27,19 @@ public class CartFragment extends Fragment {
     private final List<SessionManager.CartItem> cartItems = new ArrayList<>();
     private SessionManager session;
 
+    // keep a reference to our listener so we can remove it later
+    private final SessionManager.CartChangeListener cartChangeListener = () -> {
+        loadCartItems();
+        updateTotalPrice();
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         session = new SessionManager(requireContext());
+
+        // ✅ register our listener (multi-listener aware SessionManager)
+        session.addCartChangeListener(cartChangeListener);
     }
 
     @Nullable
@@ -44,21 +53,17 @@ public class CartFragment extends Fragment {
         tvTotalPrice = view.findViewById(R.id.tvTotalPrice);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        cartAdapter = new CartAdapter(cartItems, this::onQuantityChanged);
+        cartAdapter = new CartAdapter(cartItems, this::handleQuantityChange);
         recyclerView.setAdapter(cartAdapter);
 
         loadCartItems();
         updateTotalPrice();
-
         return view;
     }
 
     private void loadCartItems() {
         cartItems.clear();
-        Map<String, SessionManager.CartItem> savedCart = session.getCart();
-        if (savedCart != null) {
-            cartItems.addAll(savedCart.values());
-        }
+        cartItems.addAll(session.getCart().values());
         cartAdapter.notifyDataSetChanged();
     }
 
@@ -70,26 +75,29 @@ public class CartFragment extends Fragment {
         tvTotalPrice.setText("Total: ₹" + total);
     }
 
-    private void onQuantityChanged(SessionManager.CartItem item, int newQuantity) {
-        Map<String, SessionManager.CartItem> cart = session.getCart();
-        if (cart == null) return;
-
+    private void handleQuantityChange(SessionManager.CartItem item, int newQuantity) {
         if (newQuantity <= 0) {
-            cart.remove(item.id);
+            session.removeItemFromCart(item.id);
         } else {
-            item.quantity = newQuantity;
-            cart.put(item.id, item);
+            // create a new CartItem with new quantity
+            SessionManager.CartItem updated =
+                    new SessionManager.CartItem(item.id, item.name, item.price, item.imageUrl, newQuantity);
+            Map<String, SessionManager.CartItem> cart = session.getCart();
+            cart.put(item.id, updated);
+            session.saveCart(cart); // ✅ triggers listener
         }
+    }
 
-        session.saveCart(cart);
+
+    public void refreshCart() {
         loadCartItems();
         updateTotalPrice();
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        loadCartItems();
-        updateTotalPrice();
+    public void onDestroyView() {
+        super.onDestroyView();
+        // ✅ unregister listener to prevent leaks
+        session.removeCartChangeListener(cartChangeListener);
     }
 }

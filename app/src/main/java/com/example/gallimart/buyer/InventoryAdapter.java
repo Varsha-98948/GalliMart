@@ -16,21 +16,23 @@ import com.example.gallimart.R;
 import com.example.gallimart.SessionManager;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.ItemViewHolder> {
 
-    private final List<Item> itemList;
-    private final Map<String, Integer> localQuantities = new HashMap<>();
-    private final InventoryFragment fragment;
-    private final SessionManager session;
+    public interface InventoryCallback {
+        void onCartClicked();
+    }
 
-    public InventoryAdapter(List<Item> itemList, InventoryFragment fragment, SessionManager session) {
-        this.itemList = itemList;
-        this.fragment = fragment;
+    private final List<Item> itemList;
+    private final SessionManager session;
+    private final InventoryCallback callback;
+
+    public InventoryAdapter(List<Item> items, SessionManager session, InventoryCallback callback) {
+        this.itemList = items;
         this.session = session;
+        this.callback = callback;
     }
 
     @NonNull
@@ -47,47 +49,48 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Item
         if (item == null || item.getId() == null) return;
 
         String itemId = item.getId();
+        Map<String, SessionManager.CartItem> cart = session.getCart();
+        int quantity = cart.containsKey(itemId) ? cart.get(itemId).quantity : 0;
+
         holder.tvName.setText(item.getName());
         holder.tvPrice.setText("₹" + item.getPrice());
-        holder.tvQuantity.setText(String.valueOf(localQuantities.getOrDefault(itemId, 0)));
+        holder.tvQuantity.setText(String.valueOf(quantity));
 
         if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
             Glide.with(holder.itemView.getContext())
                     .load(item.getImageUrl())
                     .placeholder(R.drawable.ic_inventory)
                     .into(holder.ivImage);
-        } else holder.ivImage.setImageResource(R.drawable.ic_inventory);
+        } else {
+            holder.ivImage.setImageResource(R.drawable.ic_inventory);
+        }
 
         holder.btnPlus.setOnClickListener(v -> {
-            int newQty = localQuantities.getOrDefault(itemId, 0) + 1;
-            localQuantities.put(itemId, newQty);
-            holder.tvQuantity.setText(String.valueOf(newQty));
-
             session.addItemToCart(itemId, item.getName(), item.getPrice(), item.getImageUrl());
+            notifyItemChanged(position);
 
             Snackbar.make(holder.itemView, item.getName() + " added to cart", Snackbar.LENGTH_SHORT)
-                    .setAction("Go to Cart", view -> fragment.navigateToCart())
+                    .setAction("Go to Cart", view -> {
+                        if (callback != null) callback.onCartClicked();
+                    })
                     .show();
-
-            fragment.updateCartBadge();
-            fragment.navigateToCart(); // immediately go to cart
         });
 
         holder.btnMinus.setOnClickListener(v -> {
-            int currentQty = localQuantities.getOrDefault(itemId, 0);
-            if (currentQty > 0) {
-                int newQty = currentQty - 1;
-                localQuantities.put(itemId, newQty);
-                holder.tvQuantity.setText(String.valueOf(newQty));
+            if (quantity > 0) {
                 session.removeItemFromCart(itemId);
-                fragment.updateCartBadge();
-            } else Toast.makeText(holder.itemView.getContext(),
-                    "Quantity cannot be less than 0", Toast.LENGTH_SHORT).show();
+                notifyItemChanged(position);
+            } else {
+                Toast.makeText(holder.itemView.getContext(),
+                        "Quantity cannot be less than 0", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
     @Override
-    public int getItemCount() { return itemList.size(); }
+    public int getItemCount() {
+        return itemList.size();
+    }
 
     static class ItemViewHolder extends RecyclerView.ViewHolder {
         ImageView ivImage;
@@ -103,5 +106,10 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Item
             btnPlus = itemView.findViewById(R.id.btnPlus);
             btnMinus = itemView.findViewById(R.id.btnMinus);
         }
+    }
+
+    /** Refresh adapter from SessionManager cart changes */
+    public void refreshFromCart() {
+        notifyDataSetChanged();
     }
 }

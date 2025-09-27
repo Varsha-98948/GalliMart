@@ -1,49 +1,76 @@
 package com.example.gallimart.buyer;
 
 import android.os.Bundle;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.example.gallimart.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class BuyerDashboardActivity extends AppCompatActivity {
+
+    private LocationFragment locationFragment;
+    private InventoryFragment inventoryFragment; // now can be null initially
+    private CartFragment cartFragment;
+    private Fragment activeFragment;
+    private BottomNavigationView bottomNavigation;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_buyer_dashboard);
 
-        // Load the ShopListFragment at startup
-        replaceFragment(new ShopListFragment());
+        bottomNavigation = findViewById(R.id.bottomNavigation);
 
-        // Bottom navigation
-        BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_home) {
-                replaceFragment(new ShopListFragment());
-                return true;
-            } else if (id == R.id.nav_cart) {
-                replaceFragment(new CartFragment()); // Load the ProfileFragment here
-                return true;
-            } else if (id == R.id.nav_profile) {
-                replaceFragment(new ProfileFragment()); // Load the ProfileFragment here
-                return true;
-            }
-            return false;
-        });
+        locationFragment = new LocationFragment();
+        cartFragment = new CartFragment();
 
-
-    }
-    public void switchToCartTab() {
-        BottomNavigationView bottomNav = findViewById(R.id.bottomNavigation);
-        bottomNav.setSelectedItemId(R.id.nav_cart); // matches your buyer_nav_menu ID
-    }
-
-    private void replaceFragment(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
+        // add only location and cart initially
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container, locationFragment, "HOME")
+                .add(R.id.fragment_container, cartFragment, "CART").hide(cartFragment)
                 .commit();
+
+        activeFragment = locationFragment;
+
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            Fragment fragmentToShow = null;
+            int id = item.getItemId();
+            if (id == R.id.nav_home) fragmentToShow = locationFragment;
+            else if (id == R.id.nav_inventory) {
+                if (inventoryFragment != null) fragmentToShow = inventoryFragment;
+            } else if (id == R.id.nav_cart) fragmentToShow = cartFragment;
+
+            if (fragmentToShow != null && fragmentToShow != activeFragment) {
+                getSupportFragmentManager().beginTransaction()
+                        .hide(activeFragment)
+                        .show(fragmentToShow)
+                        .commit();
+                activeFragment = fragmentToShow;
+            }
+            return true;
+        });
+    }
+
+    public void switchToCartTab() {
+        bottomNavigation.setSelectedItemId(R.id.nav_cart);
+    }
+
+    public void showInventoryForShop(String shopId) {
+        if (inventoryFragment != null) {
+            getSupportFragmentManager().beginTransaction()
+                    .remove(inventoryFragment)
+                    .commit();
+        }
+        inventoryFragment = InventoryFragment.newInstance(shopId);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container, inventoryFragment, "INVENTORY")
+                .hide(activeFragment)
+                .commit();
+        activeFragment = inventoryFragment;
+        bottomNavigation.setSelectedItemId(R.id.nav_inventory);
+    }
+
+    public CartFragment getCartFragment() {
+        return cartFragment;
     }
 }

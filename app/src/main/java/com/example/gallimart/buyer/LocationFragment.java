@@ -32,12 +32,10 @@ public class LocationFragment extends Fragment {
     private RecyclerView rvNearbyShops;
     private ShopAdapter adapter;
     private List<Shop> shopList = new ArrayList<>();
-
     private DatabaseReference shopsRef;
     private FusedLocationProviderClient fusedLocationClient;
     private Location buyerLocation;
-
-    private static final float MAX_DISTANCE_KM = 7f; // 3 km radius
+    private static final float MAX_DISTANCE_KM = 7f; // 7 km radius
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -45,12 +43,16 @@ public class LocationFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_location_buyer, container, false);
+
         rvNearbyShops = view.findViewById(R.id.rvNearbyShops);
         rvNearbyShops.setLayoutManager(new LinearLayoutManager(getContext()));
+
         adapter = new ShopAdapter(shopList, shop -> {
-            // handle click
-            Toast.makeText(getContext(), "Clicked: " + shop.getName(), Toast.LENGTH_SHORT).show();
+            // Launch InventoryFragment for the selected shop
+            BuyerDashboardActivity activity = (BuyerDashboardActivity) requireActivity();
+            activity.showInventoryForShop(shop.getShopId());
         });
+
         rvNearbyShops.setAdapter(adapter);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
@@ -75,7 +77,7 @@ public class LocationFragment extends Fragment {
         fusedLocationClient.getLastLocation().addOnSuccessListener(requireActivity(), new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
-                if(location != null){
+                if (location != null) {
                     buyerLocation = location;
                     fetchNearbyShops();
                 } else {
@@ -92,13 +94,13 @@ public class LocationFragment extends Fragment {
                 shopList.clear();
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     Shop shop = ds.getValue(Shop.class);
-                    if(shop != null && shop.getLat() != 0 && shop.getLng() != 0) {
+                    if (shop != null && shop.getLat() != 0 && shop.getLng() != 0) {
                         Location shopLoc = new Location("");
                         shopLoc.setLatitude(shop.getLat());
                         shopLoc.setLongitude(shop.getLng());
 
-                        double distanceKm = buyerLocation.distanceTo(shopLoc)/1000f; // meters → km
-                        if(distanceKm <= MAX_DISTANCE_KM){
+                        double distanceKm = buyerLocation.distanceTo(shopLoc) / 1000f;
+                        if (distanceKm <= MAX_DISTANCE_KM) {
                             shop.setDistance(distanceKm);
                             shopList.add(shop);
                         }
