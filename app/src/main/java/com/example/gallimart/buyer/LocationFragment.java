@@ -19,6 +19,8 @@ import com.example.gallimart.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,7 +34,7 @@ public class LocationFragment extends Fragment {
     private RecyclerView rvNearbyShops;
     private ShopAdapter adapter;
     private List<Shop> shopList = new ArrayList<>();
-    private DatabaseReference shopsRef;
+    private DatabaseReference shopsRef, usersRef;
     private FusedLocationProviderClient fusedLocationClient;
     private Location buyerLocation;
     private static final float MAX_DISTANCE_KM = 7f; // 7 km radius
@@ -48,7 +50,6 @@ public class LocationFragment extends Fragment {
         rvNearbyShops.setLayoutManager(new LinearLayoutManager(getContext()));
 
         adapter = new ShopAdapter(shopList, shop -> {
-            // Launch InventoryFragment for the selected shop
             BuyerDashboardActivity activity = (BuyerDashboardActivity) requireActivity();
             activity.showInventoryForShop(shop.getShopId());
         });
@@ -57,10 +58,45 @@ public class LocationFragment extends Fragment {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         shopsRef = FirebaseDatabase.getInstance().getReference("shops");
+        usersRef = FirebaseDatabase.getInstance().getReference("users");
 
-        getBuyerLocationAndFetchShops();
+        checkBuyerAddress();
 
         return view;
+    }
+
+    /**
+     * 🔹 First check if buyer has an address saved in Firebase
+     */
+    private void checkBuyerAddress() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Toast.makeText(getContext(), "Please log in first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        usersRef.child(user.getUid()).child("address")
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        // ✅ Address exists → proceed to get location and fetch shops
+                        getBuyerLocationAndFetchShops();
+                    } else {
+                        // ❌ No address → redirect to AddressFragment
+                        Toast.makeText(getContext(),
+                                "Please add your address before browsing shops",
+                                Toast.LENGTH_LONG).show();
+
+                        requireActivity().getSupportFragmentManager()
+                                .beginTransaction()
+                                .replace(R.id.fragment_container, new AddressFragment()) // container id of your activity
+                                .addToBackStack(null)
+                                .commit();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Error checking address: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void getBuyerLocationAndFetchShops() {

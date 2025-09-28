@@ -1,10 +1,13 @@
 package com.example.gallimart.buyer;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,6 +17,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gallimart.R;
 import com.example.gallimart.SessionManager;
+import com.example.gallimart.Order;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,23 +37,22 @@ public class CartFragment extends Fragment {
     private CartAdapter cartAdapter;
     private final List<SessionManager.CartItem> cartItems = new ArrayList<>();
     private SessionManager session;
+    private double totalPrice = 0;
 
-    // keep a reference to our listener so we can remove it later
+    private DatabaseReference ordersRef;
+
     private final SessionManager.CartChangeListener cartChangeListener = () -> {
         loadCartItems();
         updateTotalPrice();
     };
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         session = new SessionManager(requireContext());
-
-        // ✅ register our listener (multi-listener aware SessionManager)
         session.addCartChangeListener(cartChangeListener);
     }
 
-    @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
@@ -58,36 +68,128 @@ public class CartFragment extends Fragment {
 
         loadCartItems();
         updateTotalPrice();
+
+        ordersRef = FirebaseDatabase.getInstance().getReference("orders");
+
+        view.findViewById(R.id.btnCheckout).setOnClickListener(v -> checkout());
+
         return view;
+    }
+
+    private void checkout() {
+        if (cartItems.isEmpty()) {
+            Toast.makeText(getContext(), "Your cart is empty!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Payment")
+                .setMessage("Proceed with dummy payment of ₹" + totalPrice + "?")
+                .setPositiveButton("Pay", (dialog, which) -> processPayment())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void processPayment() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Toast.makeText(getContext(), "User not logged in!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (cartItems.isEmpty()) {
+            Toast.makeText(getContext(), "Your cart is empty!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Fetch shopId from Firebase based on first item in cart
+        DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("shops");
+        shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String shopId = null;
+
+                for (DataSnapshot shopSnap : snapshot.getChildren()) {
+                    if (shopSnap.hasChild("items")) {
+                        DataSnapshot itemsSnap = shopSnap.child("items");
+                        for (SessionManager.CartItem cartItem : cartItems) {
+                            if (itemsSnap.hasChild(cartItem.id)) {
+                                shopId = shopSnap.getKey();
+                                break;
+                            }
+                        }
+                    }
+                    if (shopId != null) break;
+                }
+
+                if (shopId == null) {
+                    Toast.makeText(getContext(), "Cannot find shop for cart items!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                placeOrder(user, shopId);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(getContext(), "Failed to get shopId: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void placeOrder(FirebaseUser user, String shopId) {
+        String orderId = "ORD_" + System.currentTimeMillis();
+        Order order = new Order(
+                orderId,
+                user.getUid(),
+                user.getDisplayName() != null ? user.getDisplayName() : user.getEmail(),
+                shopId,
+                new ArrayList<>(cartItems),
+                totalPrice,
+                "CONFIRMED",
+                System.currentTimeMillis()
+        );
+
+        saveOrderToBackend(order);
+        session.clearCart();
+        refreshCart();
+        Toast.makeText(getContext(), "Payment Successful! Order Placed.", Toast.LENGTH_LONG).show();
+    }
+
+    private void saveOrderToBackend(Order order) {
+        ordersRef.child(order.orderId)
+                .setValue(order)
+                .addOnSuccessListener(aVoid -> Log.d("CartFragment", "Order saved: " + order.orderId))
+                .addOnFailureListener(e -> Log.e("CartFragment", "Failed to save order", e));
     }
 
     private void loadCartItems() {
         cartItems.clear();
         cartItems.addAll(session.getCart().values());
-        cartAdapter.notifyDataSetChanged();
+        if (cartAdapter != null) {
+            cartAdapter.notifyDataSetChanged();
+        }
     }
 
     private void updateTotalPrice() {
-        double total = 0;
+        totalPrice = 0;
         for (SessionManager.CartItem item : cartItems) {
-            total += item.price * item.quantity;
+            totalPrice += item.price * item.quantity;
         }
-        tvTotalPrice.setText("Total: ₹" + total);
+        tvTotalPrice.setText("Total: ₹" + totalPrice);
     }
 
     private void handleQuantityChange(SessionManager.CartItem item, int newQuantity) {
         if (newQuantity <= 0) {
             session.removeItemFromCart(item.id);
         } else {
-            // create a new CartItem with new quantity
             SessionManager.CartItem updated =
                     new SessionManager.CartItem(item.id, item.name, item.price, item.imageUrl, newQuantity);
             Map<String, SessionManager.CartItem> cart = session.getCart();
             cart.put(item.id, updated);
-            session.saveCart(cart); // ✅ triggers listener
+            session.saveCart(cart);
         }
     }
-
 
     public void refreshCart() {
         loadCartItems();
@@ -97,7 +199,6 @@ public class CartFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // ✅ unregister listener to prevent leaks
         session.removeCartChangeListener(cartChangeListener);
     }
 }
