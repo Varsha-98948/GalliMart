@@ -63,7 +63,6 @@ public class LoginActivity extends AppCompatActivity {
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-
         if (TextUtils.isEmpty(email)) {
             etEmail.setError("Enter email");
             return;
@@ -93,11 +92,34 @@ public class LoginActivity extends AppCompatActivity {
                                         String name = String.valueOf(snapshot.child("name").getValue());
                                         String emailFetched = mAuth.getCurrentUser().getEmail();
 
-                                        // Save session (name, email, role)
+                                        // Save session base info
                                         sessionManager.createLoginSession(name, emailFetched, role);
 
-                                        redirectToDashboard(role);
-                                        finish();
+                                        if ("Shopkeeper".equalsIgnoreCase(role)) {
+                                            // Fetch shopId for this shopkeeper
+                                            FirebaseDatabase.getInstance().getReference()
+                                                    .child("shops")
+                                                    .get()
+                                                    .addOnCompleteListener(taskShops -> {
+                                                        if (taskShops.isSuccessful()) {
+                                                            for (DataSnapshot shopSnapshot : taskShops.getResult().getChildren()) {
+                                                                String shopEmail = String.valueOf(shopSnapshot.child("email").getValue());
+                                                                if (emailFetched.equalsIgnoreCase(shopEmail)) {
+                                                                    String shopId = shopSnapshot.getKey();
+                                                                    sessionManager.setShopId(shopId);
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                        // Redirect anyway (shopId stored if found)
+                                                        redirectToDashboard(role);
+                                                        finish();
+                                                    });
+                                        } else {
+                                            // For Buyer / Driver
+                                            redirectToDashboard(role);
+                                            finish();
+                                        }
                                     } else {
                                         // Default to Buyer if role fetch fails
                                         sessionManager.createLoginSession("Unknown",
@@ -121,10 +143,8 @@ public class LoginActivity extends AppCompatActivity {
         } else if ("Driver".equalsIgnoreCase(role)) {
             startActivity(new Intent(this, DriverDashboardActivity.class));
         } else {
-            Intent intent = new Intent();
-            intent.setClassName("com.example.gallimart", "com.example.gallimart.buyer.BuyerDashboardActivity");
-            startActivity(intent);
-
+            startActivity(new Intent(this, BuyerDashboardActivity.class));
         }
     }
 }
+

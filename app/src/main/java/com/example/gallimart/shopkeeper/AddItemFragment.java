@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import okhttp3.*;
 
@@ -160,8 +162,14 @@ public class AddItemFragment extends Fragment {
                     } else {
                         if (getActivity() != null) {
                             String body = response.body().string();
+
+                            // Log to Logcat
+                            android.util.Log.e("UploadError", "Upload error response: " + body);
+
+                            // Show toast on UI thread
                             getActivity().runOnUiThread(() ->
-                                    Toast.makeText(getContext(), "Upload error: " + body, Toast.LENGTH_SHORT).show());
+                                    Toast.makeText(getContext(), "Upload error: " + body, Toast.LENGTH_SHORT).show()
+                            );
                         }
                     }
                 }
