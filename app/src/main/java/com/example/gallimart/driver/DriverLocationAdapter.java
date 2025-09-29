@@ -1,4 +1,4 @@
-package com.example.gallimart.driver.adapters;
+package com.example.gallimart.driver;
 
 import android.view.LayoutInflater;
 import android.view.View;

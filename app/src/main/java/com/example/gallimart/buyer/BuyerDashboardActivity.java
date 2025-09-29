@@ -12,6 +12,7 @@ public class BuyerDashboardActivity extends AppCompatActivity {
     private InventoryFragment inventoryFragment;
     private CartFragment cartFragment;
     private ProfileFragment profileFragment;
+    private BuyerOrdersFragment buyerOrderFragment;
     private Fragment activeFragment;
     private BottomNavigationView bottomNavigation;
 
@@ -26,6 +27,7 @@ public class BuyerDashboardActivity extends AppCompatActivity {
         locationFragment = new LocationFragment();
         cartFragment = new CartFragment();
         profileFragment = new ProfileFragment();
+        buyerOrderFragment = new BuyerOrdersFragment();
         // inventoryFragment = null initially
 
         // Add only home, profile, and cart initially
@@ -33,6 +35,7 @@ public class BuyerDashboardActivity extends AppCompatActivity {
                 .add(R.id.fragment_container, locationFragment, "HOME")
                 .add(R.id.fragment_container, profileFragment, "PROFILE").hide(profileFragment)
                 .add(R.id.fragment_container, cartFragment, "CART").hide(cartFragment)
+                .add(R.id.fragment_container, buyerOrderFragment, "ORDERS").hide(buyerOrderFragment)
                 .commit();
 
         activeFragment = locationFragment;
@@ -59,6 +62,8 @@ public class BuyerDashboardActivity extends AppCompatActivity {
                 fragmentToShow = cartFragment;
             } else if (id == R.id.nav_profile) {
                 fragmentToShow = profileFragment;
+            } else if (id == R.id.nav_orders) {
+                fragmentToShow = buyerOrderFragment;
             }
 
             if (fragmentToShow != null && fragmentToShow != activeFragment) {
