@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Accept"
-            android:enabled="false" />
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/btnRejectOrderDriver"
@@ -34,7 +34,33 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Reject"
-            android:enabled="false"
+            android:visibility="gone"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <!-- Buttons for marking order delivered and uploading delivery photo -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/btnUploadPhoto"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Upload Photo"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnMarkDelivered"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Mark Delivered"
+            android:visibility="gone"
             android:layout_marginStart="8dp" />
     </LinearLayout>
 
