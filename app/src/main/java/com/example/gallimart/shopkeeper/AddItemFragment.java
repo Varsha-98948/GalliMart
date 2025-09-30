@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +22,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 import okhttp3.*;
 
@@ -35,46 +33,49 @@ public class AddItemFragment extends Fragment {
     private Uri selectedImage;
     private DatabaseReference firebaseRef;
     private String shopId;
-    private String supabaseUrl = "https://yxzgowwvyhugzgjiypbk.supabase.co";
-    private String bucketName = "uploads";
-    private String supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4emdvd3d2eWh1Z3pnaml5cGJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1ODc5NjYsImV4cCI6MjA3MzE2Mzk2Nn0.K694SUdB5djvZvn9QdAr1ZwfgpxBudyDekXCouz4_Y0";
+
+    private final String supabaseUrl = "https://yxzgowwvyhugzgjiypbk.supabase.co";
+    private final String bucketName = "uploads";
+    private final String supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4emdvd3d2eWh1Z3pnaml5cGJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1ODc5NjYsImV4cCI6MjA3MzE2Mzk2Nn0.K694SUdB5djvZvn9QdAr1ZwfgpxBudyDekXCouz4_Y0";
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_add_item, container, false);
 
+        // Bind UI elements
         etName = view.findViewById(R.id.etName);
         etPrice = view.findViewById(R.id.etPrice);
         etQuantity = view.findViewById(R.id.etQuantity);
         etDescription = view.findViewById(R.id.etDescription);
         ivPreview = view.findViewById(R.id.ivPreview);
 
-        // get shopId from SessionManager or arguments
+        Button btnChooseImage = view.findViewById(R.id.btnChooseImage);
+        Button btnSubmit = view.findViewById(R.id.btnSubmit);
+
+        // Get shopId from SessionManager or arguments
         SessionManager sm = new SessionManager(requireContext());
         shopId = sm.getShopId();
-
         if (shopId == null) {
             Toast.makeText(getContext(), "No shopId found", Toast.LENGTH_SHORT).show();
         } else {
-            // point to /shops/{shopId}/items
             firebaseRef = FirebaseDatabase.getInstance()
                     .getReference("shops")
                     .child(shopId)
                     .child("items");
         }
 
-        Button btnChooseImage = view.findViewById(R.id.btnChooseImage);
+        // Image picker
         btnChooseImage.setOnClickListener(v -> pickImage());
 
-        Button btnSubmit = view.findViewById(R.id.btnSubmit);
+        // Submit button
         btnSubmit.setOnClickListener(v -> uploadItem());
 
         return view;
     }
-
 
     private void pickImage() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -102,10 +103,16 @@ public class AddItemFragment extends Fragment {
             return;
         }
 
-        double price = Double.parseDouble(priceStr);
-        int quantity = Integer.parseInt(qtyStr);
+        double price;
+        int quantity;
+        try {
+            price = Double.parseDouble(priceStr);
+            quantity = Integer.parseInt(qtyStr);
+        } catch (NumberFormatException e) {
+            Toast.makeText(getContext(), "Invalid number format", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        // upload image to Supabase
         uploadImageToSupabase(name, price, quantity, desc);
     }
 
@@ -137,18 +144,16 @@ public class AddItemFragment extends Fragment {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    if (getActivity() != null)
+                    if (getActivity() != null) {
                         getActivity().runOnUiThread(() ->
                                 Toast.makeText(getContext(), "Upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                    }
                 }
 
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                     if (response.isSuccessful()) {
-                        // public URL to show in app
                         String imageUrl = supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;
-
-                        // add the item to Firebase under /shops/<shopId>/items/<itemId>
                         String id = firebaseRef.push().getKey();
                         InventoryItem item = new InventoryItem(id, name, price, quantity, desc, imageUrl);
                         firebaseRef.child(id).setValue(item);
@@ -161,12 +166,7 @@ public class AddItemFragment extends Fragment {
                         }
                     } else {
                         if (getActivity() != null) {
-                            String body = response.body().string();
-
-                            // Log to Logcat
-                            android.util.Log.e("UploadError", "Upload error response: " + body);
-
-                            // Show toast on UI thread
+                            String body = response.body() != null ? response.body().string() : "No response body";
                             getActivity().runOnUiThread(() ->
                                     Toast.makeText(getContext(), "Upload error: " + body, Toast.LENGTH_SHORT).show()
                             );
@@ -174,6 +174,7 @@ public class AddItemFragment extends Fragment {
                     }
                 }
             });
+
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }

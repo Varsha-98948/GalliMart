@@ -11,7 +11,9 @@ import java.util.List;
 
 public class ShopAdapter extends RecyclerView.Adapter<ShopAdapter.ShopViewHolder> {
 
-    public interface OnShopClickListener { void onShopClick(Shop shop); }
+    public interface OnShopClickListener {
+        void onShopClick(Shop shop);
+    }
 
     private List<Shop> shopList;
     private OnShopClickListener listener;
@@ -33,17 +35,30 @@ public class ShopAdapter extends RecyclerView.Adapter<ShopAdapter.ShopViewHolder
     public void onBindViewHolder(@NonNull ShopViewHolder holder, int position) {
         Shop shop = shopList.get(position);
         holder.shopName.setText(shop.getName());
+
+        // Show distance if available, otherwise hide
+        if (shop.getDistance() > 0) {
+            holder.distance.setText(String.format("%.1f km away", shop.getDistance()));
+            holder.distance.setVisibility(View.VISIBLE);
+        } else {
+            holder.distance.setVisibility(View.GONE);
+        }
+
         holder.itemView.setOnClickListener(v -> listener.onShopClick(shop));
     }
 
     @Override
-    public int getItemCount() { return shopList.size(); }
+    public int getItemCount() {
+        return shopList.size();
+    }
 
     static class ShopViewHolder extends RecyclerView.ViewHolder {
-        TextView shopName;
+        TextView shopName, distance;
+
         ShopViewHolder(@NonNull View itemView) {
             super(itemView);
             shopName = itemView.findViewById(R.id.tvShopName);
+            distance = itemView.findViewById(R.id.tvDistance);
         }
     }
 }

@@ -1,39 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    android:elevation="4dp"
-    android:padding="12dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    android:clickable="true"
+    android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="12dp">
 
         <TextView
             android:id="@+id/txtShop"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Shop"
-            android:textStyle="bold" />
+            android:text="Shop Name"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorOnSurface"/>
 
         <TextView
             android:id="@+id/txtStatus"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Status" />
-
-        <TextView
-            android:id="@+id/txtDriverStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Driver Status" />
+            android:text="Status"
+            android:textSize="14sp"
+            android:textColor="@color/colorOnSurfaceVariant"
+            android:layout_marginTop="4dp"/>
 
         <TextView
             android:id="@+id/txtItems"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Items" />
+            android:text="Items"
+            android:textSize="14sp"
+            android:textColor="@color/colorOnSurfaceVariant"
+            android:layout_marginTop="4dp"/>
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

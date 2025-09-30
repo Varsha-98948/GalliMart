@@ -1,31 +1,26 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground">
 
-    <!-- RecyclerView for inventory items -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewInventory"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp"
         android:clipToPadding="false"
+        android:padding="8dp"
         android:scrollbars="vertical"/>
 
-    <!-- Floating Cart Button -->
-    <ImageButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabCart"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:contentDescription="Cart"
-        android:scaleType="centerInside"
-        android:padding="12dp"
-        android:src="@drawable/ic_inventory"
-        app:elevation="8dp"/>
-
+        android:src="@drawable/ic_cart"
+        app:tint = "#FFFFFF"
+        app:backgroundTint="#2C3E50"/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

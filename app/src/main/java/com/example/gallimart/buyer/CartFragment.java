@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.example.gallimart.R;
 import com.example.gallimart.SessionManager;
 import com.example.gallimart.Order;
@@ -41,6 +43,9 @@ public class CartFragment extends Fragment {
 
     private DatabaseReference ordersRef;
 
+    private LottieAnimationView lottieEmpty;
+    private LinearLayout checkoutContainer;
+
     private final SessionManager.CartChangeListener cartChangeListener = () -> {
         loadCartItems();
         updateTotalPrice();
@@ -53,6 +58,7 @@ public class CartFragment extends Fragment {
         session.addCartChangeListener(cartChangeListener);
     }
 
+    @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
@@ -61,6 +67,8 @@ public class CartFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recyclerViewCart);
         tvTotalPrice = view.findViewById(R.id.tvTotalPrice);
+        lottieEmpty = view.findViewById(R.id.lottieEmptyCart);
+        checkoutContainer = view.findViewById(R.id.checkoutContainer);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         cartAdapter = new CartAdapter(cartItems, this::handleQuantityChange);
@@ -102,7 +110,6 @@ public class CartFragment extends Fragment {
             return;
         }
 
-        // Fetch shopId from Firebase based on first item in cart
         DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("shops");
         shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -166,8 +173,17 @@ public class CartFragment extends Fragment {
     private void loadCartItems() {
         cartItems.clear();
         cartItems.addAll(session.getCart().values());
-        if (cartAdapter != null) {
-            cartAdapter.notifyDataSetChanged();
+        if (cartAdapter != null) cartAdapter.notifyDataSetChanged();
+
+        // Show/hide empty cart animation
+        if (cartItems.isEmpty()) {
+            lottieEmpty.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+            checkoutContainer.setVisibility(View.GONE);
+        } else {
+            lottieEmpty.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+            checkoutContainer.setVisibility(View.VISIBLE);
         }
     }
 

@@ -4,12 +4,13 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gallimart.R;
@@ -32,15 +33,11 @@ public class InventoryFragment extends Fragment {
     private SessionManager session;
     private ImageButton fabCart;
 
-    // keep a reference to our listener
     private final SessionManager.CartChangeListener cartChangeListener = () -> {
-        if (adapter != null) {
-            adapter.refreshFromCart(); // refresh quantities
-            updateCartBadge();
-        }
+        if (adapter != null) adapter.refreshFromCart();
+        updateCartBadge();
     };
 
-    // STATIC FACTORY METHOD
     public static InventoryFragment newInstance(String shopId) {
         InventoryFragment fragment = new InventoryFragment();
         Bundle args = new Bundle();
@@ -58,7 +55,6 @@ public class InventoryFragment extends Fragment {
         if (shopId == null) shopId = session.getShopId();
         if (shopId == null) throw new IllegalStateException("Shop ID not found!");
 
-        // ✅ register our listener
         session.addCartChangeListener(cartChangeListener);
     }
 
@@ -73,13 +69,20 @@ public class InventoryFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recyclerViewInventory);
         fabCart = view.findViewById(R.id.fabCart);
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        // Grid layout for 2 columns
+        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
         adapter = new InventoryAdapter(itemList, session, () -> {
             if (getActivity() instanceof BuyerDashboardActivity) {
                 ((BuyerDashboardActivity) getActivity()).switchToCartTab();
             }
         });
         recyclerView.setAdapter(adapter);
+
+        // Apply layout animation
+        recyclerView.setLayoutAnimation(
+                AnimationUtils.loadLayoutAnimation(getContext(), R.anim.layout_fade_in)
+        );
+        recyclerView.scheduleLayoutAnimation();
 
         fabCart.setOnClickListener(v -> {
             if (getActivity() instanceof BuyerDashboardActivity) {
@@ -108,6 +111,7 @@ public class InventoryFragment extends Fragment {
                     if (item != null) itemList.add(item);
                 }
                 if (adapter != null) adapter.notifyDataSetChanged();
+                recyclerView.scheduleLayoutAnimation(); // trigger animation on new data
             }
 
             @Override
@@ -117,8 +121,7 @@ public class InventoryFragment extends Fragment {
 
     public void updateCartBadge() {
         int count = session.getCartItemCount();
-        // update your badge here (placeholder icon for now)
-        fabCart.setImageResource(count > 0 ? R.drawable.ic_inventory : R.drawable.ic_inventory);
+        fabCart.setImageResource(count > 0 ? R.drawable.ic_cart : R.drawable.ic_cart);
     }
 
     @Override
@@ -131,7 +134,6 @@ public class InventoryFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // ✅ unregister listener to prevent leaks
         session.removeCartChangeListener(cartChangeListener);
     }
 }

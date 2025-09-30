@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.gallimart.R;
 import com.example.gallimart.SessionManager;
-import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
 import java.util.Map;
@@ -59,21 +58,15 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Item
         if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
             Glide.with(holder.itemView.getContext())
                     .load(item.getImageUrl())
-                    .placeholder(R.drawable.ic_inventory)
+                    .placeholder(R.drawable.ic_cart)
                     .into(holder.ivImage);
         } else {
-            holder.ivImage.setImageResource(R.drawable.ic_inventory);
+            holder.ivImage.setImageResource(R.drawable.ic_cart);
         }
 
         holder.btnPlus.setOnClickListener(v -> {
             session.addItemToCart(itemId, item.getName(), item.getPrice(), item.getImageUrl());
             notifyItemChanged(position);
-
-            Snackbar.make(holder.itemView, item.getName() + " added to cart", Snackbar.LENGTH_SHORT)
-                    .setAction("Go to Cart", view -> {
-                        if (callback != null) callback.onCartClicked();
-                    })
-                    .show();
         });
 
         holder.btnMinus.setOnClickListener(v -> {

@@ -5,6 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Top App Bar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbarDriver"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/dark_navy"
+        android:elevation="4dp"
+        android:titleTextColor="@color/white"
+        android:title="Locations" />
+
     <!-- Fragment container -->
     <FrameLayout
         android:id="@+id/fragment_container"
@@ -17,5 +27,7 @@
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:itemIconTint="@color/bottom_nav_colors"
+        app:itemTextColor="@color/bottom_nav_colors"
         app:menu="@menu/driver_nav_menu"/>
 </LinearLayout>

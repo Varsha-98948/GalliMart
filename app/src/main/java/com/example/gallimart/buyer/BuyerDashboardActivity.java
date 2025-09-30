@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.example.gallimart.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.appbar.MaterialToolbar;
 
 public class BuyerDashboardActivity extends AppCompatActivity {
 
@@ -15,12 +16,14 @@ public class BuyerDashboardActivity extends AppCompatActivity {
     private BuyerOrdersFragment buyerOrderFragment;
     private Fragment activeFragment;
     private BottomNavigationView bottomNavigation;
+    private MaterialToolbar topAppBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_buyer_dashboard);
 
+        topAppBar = findViewById(R.id.topAppBar);
         bottomNavigation = findViewById(R.id.bottomNavigation);
 
         // Initialize fragments
@@ -39,13 +42,17 @@ public class BuyerDashboardActivity extends AppCompatActivity {
                 .commit();
 
         activeFragment = locationFragment;
+        setToolbarTitle("Home"); // initial title
 
         bottomNavigation.setOnItemSelectedListener(item -> {
             Fragment fragmentToShow = null;
+            String title = "";
+
             int id = item.getItemId();
 
             if (id == R.id.nav_home) {
                 fragmentToShow = locationFragment;
+                title = "Home";
             } else if (id == R.id.nav_inventory) {
                 if (inventoryFragment == null) {
                     inventoryFragment = new InventoryFragment();
@@ -54,16 +61,21 @@ public class BuyerDashboardActivity extends AppCompatActivity {
                             .hide(activeFragment)
                             .commit();
                     activeFragment = inventoryFragment;
-                    return true; // handled
+                    setToolbarTitle("Inventory");
+                    return true;
                 } else {
                     fragmentToShow = inventoryFragment;
+                    title = "Inventory";
                 }
             } else if (id == R.id.nav_cart) {
                 fragmentToShow = cartFragment;
+                title = "Cart";
             } else if (id == R.id.nav_profile) {
                 fragmentToShow = profileFragment;
+                title = "Profile";
             } else if (id == R.id.nav_orders) {
                 fragmentToShow = buyerOrderFragment;
+                title = "Orders";
             }
 
             if (fragmentToShow != null && fragmentToShow != activeFragment) {
@@ -72,13 +84,15 @@ public class BuyerDashboardActivity extends AppCompatActivity {
                         .show(fragmentToShow)
                         .commit();
                 activeFragment = fragmentToShow;
+                setToolbarTitle(title);
             }
             return true;
         });
     }
 
-
-
+    private void setToolbarTitle(String title) {
+        if (topAppBar != null) topAppBar.setTitle(title);
+    }
 
     public void switchToCartTab() {
         bottomNavigation.setSelectedItemId(R.id.nav_cart);
@@ -97,6 +111,7 @@ public class BuyerDashboardActivity extends AppCompatActivity {
                 .commit();
         activeFragment = inventoryFragment;
         bottomNavigation.setSelectedItemId(R.id.nav_inventory);
+        setToolbarTitle("Inventory");
     }
 
     public CartFragment getCartFragment() {

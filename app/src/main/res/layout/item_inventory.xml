@@ -1,6 +1,56 @@
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/txtItemName"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="16dp"
-    android:textSize="16sp" />
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/colorSurface"
+    android:clickable="true"
+    android:foreground="?attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/ivItemImage"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:scaleType="centerCrop"
+            android:background="@color/colorSurfaceVariant"
+            android:contentDescription="Item Image"
+            android:clipToOutline="true"/>
+
+        <TextView
+            android:id="@+id/txtItemName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Item Name"
+            android:textSize="16sp"
+            android:textColor="@color/colorOnSurface"
+            android:layout_marginTop="8dp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/txtItemPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="₹0"
+            android:textColor="@color/colorOnSurfaceVariant"
+            android:layout_marginTop="4dp"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/txtItemQuantity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Qty: 0"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/colorOnSurfaceVariant"
+            android:textSize="14sp"/>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

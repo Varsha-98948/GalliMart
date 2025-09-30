@@ -1,55 +1,86 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="10dp">
-
-    <ImageView
-        android:id="@+id/ivCartItem"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_inventory" />
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/colorSurface">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingStart="10dp">
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/tvCartItemName"
+        <ImageView
+            android:id="@+id/ivCartItem"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:scaleType="centerCrop"
+            android:background="@color/colorSurfaceVariant"
+            android:clipToOutline="true"
+            android:contentDescription="Cart Item Image"
+            android:src="@drawable/ic_inventory"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="12dp">
+
+            <TextView
+                android:id="@+id/tvCartItemName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Item Name"
+                android:textSize="16sp"
+                android:textColor="@color/colorOnSurface"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/tvCartItemPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹100"
+                android:textColor="@color/colorOnSurfaceVariant"
+                android:textSize="14sp"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Item Name"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/tvCartItemPrice"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="₹100" />
+            <ImageButton
+                android:id="@+id/btnDecreaseQty"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_minus"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="#1C2833"/>
 
-        <TextView
-            android:id="@+id/tvCartQuantity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="1" />
+            <TextView
+                android:id="@+id/tvCartQuantity"
+                android:layout_width="32dp"
+                android:layout_height="wrap_content"
+                android:text="1"
+                android:gravity="center"
+                android:textColor="@color/colorOnSurface"
+                android:textSize="14sp"/>
+
+            <ImageButton
+                android:id="@+id/btnIncreaseQty"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_plus"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="#1C2833"/>
+        </LinearLayout>
     </LinearLayout>
-
-    <ImageButton
-        android:id="@+id/btnDecreaseQty"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:src="@drawable/ic_inventory"
-        android:background="?attr/selectableItemBackgroundBorderless" />
-
-    <ImageButton
-        android:id="@+id/btnIncreaseQty"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:src="@drawable/ic_inventory"
-        android:background="?attr/selectableItemBackgroundBorderless" />
-
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

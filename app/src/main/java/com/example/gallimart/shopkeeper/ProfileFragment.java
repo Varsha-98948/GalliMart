@@ -3,11 +3,12 @@ package com.example.gallimart.shopkeeper;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,7 +40,7 @@ public class ProfileFragment extends Fragment {
     private MapView mapView;
     private GeoPoint currentPoint;
 
-    @com.example.gallimart.shopkeeper.Nullable
+    @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -52,10 +53,19 @@ public class ProfileFragment extends Fragment {
         tvRole = view.findViewById(R.id.tvRoleShopkeeper);
         btnLogout = view.findViewById(R.id.btnLogoutShopkeeper);
         btnSaveLocation = view.findViewById(R.id.btnSaveLocationShopkeeper);
+        mapView = view.findViewById(R.id.mapShopLocation);
 
         tvName.setText(sessionManager.getUserName());
         tvEmail.setText(sessionManager.getUserEmail());
         tvRole.setText("Shopkeeper");
+
+        // Fade-in animation for profile info
+        fadeInView(tvName);
+        fadeInView(tvEmail);
+        fadeInView(tvRole);
+        fadeInView(btnLogout);
+        fadeInView(btnSaveLocation);
+        fadeInView(mapView);
 
         btnLogout.setOnClickListener(v -> {
             sessionManager.logout(true);
@@ -67,7 +77,6 @@ public class ProfileFragment extends Fragment {
         Configuration.getInstance().load(requireContext(),
                 android.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()));
 
-        mapView = view.findViewById(R.id.mapShopLocation);
         mapView.setTileSource(TileSourceFactory.MAPNIK);
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(16.0);
@@ -96,36 +105,41 @@ public class ProfileFragment extends Fragment {
             });
         }
 
-        btnSaveLocation.setOnClickListener(v -> {
-            if (currentPoint != null) {
-                // Always try to get the saved shopId first
-                String shopId = sessionManager.getShopId();
-
-                // If shopId is not yet saved, create one now and store it in session
-                if (shopId == null || shopId.isEmpty()) {
-                    // for example: use FirebaseAuth UID or push key
-                    shopId = FirebaseDatabase.getInstance().getReference("shops").push().getKey();
-                    sessionManager.setShopId(shopId);
-                }
-
-                // Now ALWAYS write to shops/<shopId>
-                DatabaseReference shopRef = FirebaseDatabase.getInstance()
-                        .getReference("shops")
-                        .child(shopId);
-
-                // Save the shop’s basic details
-                shopRef.child("name").setValue(sessionManager.getUserName());
-                shopRef.child("email").setValue(sessionManager.getUserEmail());
-                shopRef.child("lat").setValue(currentPoint.getLatitude());
-                shopRef.child("lng").setValue(currentPoint.getLongitude());
-                shopRef.child("shopId").setValue(shopId);
-
-                Toast.makeText(getContext(), "Shop location saved!", Toast.LENGTH_SHORT).show();
-            }
-        });
-
+        btnSaveLocation.setOnClickListener(v -> saveShopLocation());
 
         return view;
+    }
+
+    private void fadeInView(View view) {
+        Animation fadeIn = new AlphaAnimation(0, 1);
+        fadeIn.setDuration(800);
+        view.startAnimation(fadeIn);
+        view.setVisibility(View.VISIBLE);
+    }
+
+    private void saveShopLocation() {
+        if (currentPoint != null) {
+            String shopId = sessionManager.getShopId();
+
+            if (shopId == null || shopId.isEmpty()) {
+                shopId = FirebaseDatabase.getInstance().getReference("shops").push().getKey();
+                sessionManager.setShopId(shopId);
+            }
+
+            DatabaseReference shopRef = FirebaseDatabase.getInstance()
+                    .getReference("shops")
+                    .child(shopId);
+
+            shopRef.child("name").setValue(sessionManager.getUserName());
+            shopRef.child("email").setValue(sessionManager.getUserEmail());
+            shopRef.child("lat").setValue(currentPoint.getLatitude());
+            shopRef.child("lng").setValue(currentPoint.getLongitude());
+            shopRef.child("shopId").setValue(shopId);
+
+            Toast.makeText(getContext(), "Shop location saved!", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getContext(), "Unable to get current location", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

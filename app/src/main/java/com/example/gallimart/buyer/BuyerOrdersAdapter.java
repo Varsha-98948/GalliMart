@@ -1,10 +1,11 @@
 package com.example.gallimart.buyer;
 
+import android.annotation.SuppressLint;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,10 +43,10 @@ public class BuyerOrdersAdapter extends RecyclerView.Adapter<BuyerOrdersAdapter.
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Order order = orderList.get(position);
+    public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position) {
+        final Order order = orderList.get(position);
 
-        // Fetch shop name dynamically from Firebase
+        // Fetch shop name dynamically
         DatabaseReference shopRef = FirebaseDatabase.getInstance()
                 .getReference("shops")
                 .child(order.shopId);
@@ -67,27 +68,33 @@ public class BuyerOrdersAdapter extends RecyclerView.Adapter<BuyerOrdersAdapter.
             }
         });
 
-        // Display order status safely
+        // Order status
         holder.txtStatus.setText("Status: " + (order.status != null ? order.status : "Pending"));
 
-        // Display order items
+        // Order items
         if (order.items != null && !order.items.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             for (com.example.gallimart.SessionManager.CartItem item : order.items) {
-                sb.append(item.name)
-                        .append(" (x")
-                        .append(item.quantity)
-                        .append("), ");
+                sb.append(item.name).append(" (x").append(item.quantity).append("), ");
             }
-            // Remove trailing comma and space
             if (sb.length() > 2) sb.setLength(sb.length() - 2);
             holder.txtItems.setText(sb.toString());
         } else {
             holder.txtItems.setText("No items");
         }
 
-        // Handle order click
+        // Click listener
         holder.itemView.setOnClickListener(v -> listener.onOrderClick(order));
+
+        // Item animation: fade + slide up
+        holder.itemView.setAlpha(0f);
+        holder.itemView.setTranslationY(50f);
+        holder.itemView.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(300)
+                .setStartDelay(position * 50L)
+                .start();
     }
 
     @Override
@@ -95,10 +102,10 @@ public class BuyerOrdersAdapter extends RecyclerView.Adapter<BuyerOrdersAdapter.
         return orderList.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
         TextView txtShop, txtStatus, txtItems;
 
-        public ViewHolder(@NonNull View itemView) {
+        ViewHolder(@NonNull View itemView) {
             super(itemView);
             txtShop = itemView.findViewById(R.id.txtShop);
             txtStatus = itemView.findViewById(R.id.txtStatus);

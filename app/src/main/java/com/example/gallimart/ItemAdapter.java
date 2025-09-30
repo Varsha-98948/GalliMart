@@ -15,8 +15,8 @@ import java.util.List;
 
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
 
-    private Context context;
-    private List<InventoryItem> itemList;
+    private final Context context;
+    private final List<InventoryItem> itemList;
 
     public ItemAdapter(Context context, List<InventoryItem> itemList) {
         this.context = context;
@@ -46,6 +46,16 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         } else {
             holder.ivImage.setImageResource(R.drawable.ic_inventory);
         }
+
+        // Animate item: fade in + slide up
+        holder.itemView.setAlpha(0f);
+        holder.itemView.setTranslationY(50f);
+        holder.itemView.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(300)
+                .setStartDelay(position * 50L)
+                .start();
     }
 
     @Override
@@ -56,6 +66,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
     static class ItemViewHolder extends RecyclerView.ViewHolder {
         ImageView ivImage;
         TextView tvName, tvPrice, tvQuantity;
+
         ItemViewHolder(@NonNull View itemView) {
             super(itemView);
             ivImage = itemView.findViewById(R.id.ivItemImage);

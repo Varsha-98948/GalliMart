@@ -14,7 +14,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"/>
-        <activity android:name=".HomeActivity"/>
         <activity android:name=".login.ResetPasswordActivity"/>
         <activity android:name=".login.RegisterActivity"/>
         <activity android:name=".shopkeeper.ShopkeeperDashboardActivity" />

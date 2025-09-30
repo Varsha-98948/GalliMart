@@ -1,18 +1,117 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:gravity="center_horizontal"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground">
 
-    <TextView android:id="@+id/tvNameDriver" android:textSize="20sp"
-        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-    <TextView android:id="@+id/tvEmailDriver" android:textSize="16sp"
-        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-    <TextView android:id="@+id/tvRoleDriver" android:textSize="16sp"
-        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
 
-    <Button android:id="@+id/btnLogoutDriver" android:text="Logout"
-        android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"/>
-</LinearLayout>
+        <!-- Profile Picture -->
+        <ImageView
+            android:id="@+id/ivProfileDriver"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/ic_profile_placeholder"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="16dp"
+            android:contentDescription="Driver Profile Picture" />
+
+        <!-- Name -->
+        <TextView
+            android:id="@+id/tvNameDriver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorOnSurface"
+            android:layout_marginTop="12dp"
+            android:text="John Doe"/>
+
+        <!-- Email -->
+        <TextView
+            android:id="@+id/tvEmailDriver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="@color/colorOnSurfaceVariant"
+            android:layout_marginTop="4dp"
+            android:text="johndoe@example.com"/>
+
+        <!-- Role -->
+        <TextView
+            android:id="@+id/tvRoleDriver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/colorOnSurfaceVariant"
+            android:layout_marginTop="2dp"
+            android:text="Driver"/>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/colorSurfaceVariant"
+            android:layout_marginVertical="16dp"/>
+
+        <!-- Options (if needed, else leave empty or remove) -->
+        <LinearLayout
+            android:id="@+id/driverOptions"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Example: Delivery History -->
+            <LinearLayout
+                android:id="@+id/optionDeliveryHistory"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Delivery History"
+                    android:textColor="@color/colorOnSurface"
+                    android:textSize="16sp"/>
+            </LinearLayout>
+
+            <!-- Example: Help -->
+            <LinearLayout
+                android:id="@+id/optionHelpDriver"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Help"
+                    android:textColor="@color/colorOnSurface"
+                    android:textSize="16sp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Logout Button -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnLogoutDriver"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Logout"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="@color/red"
+            android:textColor="@color/colorSurface"/>
+
+    </LinearLayout>
+</ScrollView>

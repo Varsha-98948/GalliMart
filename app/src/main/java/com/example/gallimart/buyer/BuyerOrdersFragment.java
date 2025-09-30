@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.example.gallimart.Order;
 import com.example.gallimart.R;
 import com.google.firebase.auth.FirebaseAuth;
@@ -33,6 +34,7 @@ public class BuyerOrdersFragment extends Fragment implements BuyerOrdersAdapter.
     private RecyclerView rvOrders;
     private BuyerOrdersAdapter adapter;
     private List<Order> orderList;
+    private LottieAnimationView lottieEmpty;
 
     private DatabaseReference ordersRef;
     private String buyerId;
@@ -42,11 +44,13 @@ public class BuyerOrdersFragment extends Fragment implements BuyerOrdersAdapter.
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_buyer_orders, container, false);
 
-        rvOrders = view.findViewById(R.id.rvBuyerOrders);
+        View view = inflater.inflate(R.layout.fragment_orders, container, false);
+
+        rvOrders = view.findViewById(R.id.recyclerOrders);
+        lottieEmpty = view.findViewById(R.id.lottieEmptyOrders);
+
         rvOrders.setLayoutManager(new LinearLayoutManager(getContext()));
-
         orderList = new ArrayList<>();
         adapter = new BuyerOrdersAdapter(orderList, this);
         rvOrders.setAdapter(adapter);
@@ -56,6 +60,7 @@ public class BuyerOrdersFragment extends Fragment implements BuyerOrdersAdapter.
             Toast.makeText(getContext(), "Not logged in", Toast.LENGTH_SHORT).show();
             return view;
         }
+
         buyerId = user.getUid();
         ordersRef = FirebaseDatabase.getInstance().getReference("orders");
 
@@ -73,11 +78,18 @@ public class BuyerOrdersFragment extends Fragment implements BuyerOrdersAdapter.
                         for (DataSnapshot orderSnap : snapshot.getChildren()) {
                             Order order = orderSnap.getValue(Order.class);
                             if (order != null) {
-                                order.orderId = orderSnap.getKey(); // store key for later
+                                order.orderId = orderSnap.getKey();
                                 orderList.add(order);
                             }
                         }
                         adapter.notifyDataSetChanged();
+
+                        // Show Lottie if empty
+                        if (orderList.isEmpty()) {
+                            lottieEmpty.setVisibility(View.VISIBLE);
+                        } else {
+                            lottieEmpty.setVisibility(View.GONE);
+                        }
                     }
 
                     @Override
@@ -89,7 +101,6 @@ public class BuyerOrdersFragment extends Fragment implements BuyerOrdersAdapter.
 
     @Override
     public void onOrderClick(Order order) {
-        // Open BuyerOrderDetailFragment instead of starting an Activity
         BuyerOrderDetailFragment fragment = new BuyerOrderDetailFragment();
         Bundle args = new Bundle();
         args.putString("orderId", order.orderId);
@@ -97,7 +108,9 @@ public class BuyerOrdersFragment extends Fragment implements BuyerOrdersAdapter.
 
         getParentFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fragment_container, fragment) // R.id.fragment_container = your activity's fragment container
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out,
+                        android.R.anim.fade_in, android.R.anim.fade_out)
+                .replace(R.id.fragment_container, fragment)
                 .addToBackStack(null)
                 .commit();
     }

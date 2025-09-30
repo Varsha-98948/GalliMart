@@ -1,35 +1,34 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/location_fragment_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:padding="16dp">
 
-    <!-- Shop list section -->
-    <LinearLayout
-        android:orientation="vertical"
+    <!-- RecyclerView for nearby shops -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvNearbyShops"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp">
+        android:clipToPadding="false"
+        android:paddingTop="12dp"
+        android:scrollbars="vertical"/>
 
-        <TextView
-            android:id="@+id/tvNearbyShopsTitle"
-            android:text="Nearby Shops"
-            android:textSize="20sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"/>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvNearbyShops"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="12dp"/>
-    </LinearLayout>
+    <!-- Loading overlay while fetching shops -->
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/lottieLoadingShops"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_gravity="center"
+        android:clickable="false"
+        android:focusable="false"
+        android:visibility="gone"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/loading"/>
 
-    <!-- Inventory container, initially gone -->
-    <FrameLayout
-        android:id="@+id/inventory_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"/>
 </FrameLayout>

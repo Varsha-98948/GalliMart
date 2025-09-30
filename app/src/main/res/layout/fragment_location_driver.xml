@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="8dp"
+    android:background="@color/colorBackground"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="8dp">
 
-    <!-- Map showing driver location and shop/customer markers -->
+    <!-- Map -->
     <org.osmdroid.views.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_marginBottom="8dp" />
+        android:layout_height="280dp"
+        android:layout_marginBottom="12dp"
+        android:background="@color/dark_navy"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Buttons for driver to accept or reject assigned order -->
+    <!-- Order Action Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="12dp">
 
         <Button
             android:id="@+id/btnAcceptOrderDriver"
@@ -26,7 +30,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Accept"
-            android:visibility="gone" />
+            android:textColor="@color/white"
+            android:backgroundTint="@color/colorPrimary"
+            android:visibility="gone"
+            android:padding="12dp"
+            android:layout_marginEnd="6dp"
+            android:drawablePadding="4dp"
+            android:stateListAnimator="@null"
+            android:background="@drawable/rounded_button" />
 
         <Button
             android:id="@+id/btnRejectOrderDriver"
@@ -34,17 +45,22 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Reject"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/red"
             android:visibility="gone"
-            android:layout_marginStart="8dp" />
+            android:padding="12dp"
+            android:layout_marginStart="6dp"
+            android:stateListAnimator="@null"
+            android:background="@drawable/rounded_button" />
     </LinearLayout>
 
-    <!-- Buttons for marking order delivered and uploading delivery photo -->
+    <!-- Delivery Photo / Mark Delivered -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="12dp">
 
         <Button
             android:id="@+id/btnUploadPhoto"
@@ -52,7 +68,12 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Upload Photo"
-            android:visibility="gone" />
+            android:textColor="@color/white"
+            android:backgroundTint="@color/dark_navy"
+            android:visibility="gone"
+            android:padding="12dp"
+            android:layout_marginEnd="6dp"
+            android:stateListAnimator="@null"/>
 
         <Button
             android:id="@+id/btnMarkDelivered"
@@ -60,17 +81,22 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Mark Delivered"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/dark_navy"
             android:visibility="gone"
-            android:layout_marginStart="8dp" />
+            android:padding="12dp"
+            android:layout_marginStart="6dp"
+            android:stateListAnimator="@null"/>
     </LinearLayout>
 
-    <!-- RecyclerView showing pickup and delivery locations -->
+    <!-- RecyclerView for Locations -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvDriverLocations"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingBottom="8dp" />
+        android:paddingBottom="8dp"
+        android:scrollbars="vertical"/>
 
 </LinearLayout>

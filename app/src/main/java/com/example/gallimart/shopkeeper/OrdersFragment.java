@@ -93,9 +93,14 @@ public class OrdersFragment extends Fragment {
                         if (order != null) {
                             orderList.add(order);
                             adapter.notifyDataSetChanged();
-                            Toast.makeText(getContext(), "New Order: " + order.orderId, Toast.LENGTH_LONG).show();
+
+                            // Only show Toast if fragment is attached
+                            if (isAdded()) {
+                                Toast.makeText(requireContext(), "New Order: " + order.orderId, Toast.LENGTH_LONG).show();
+                            }
                         }
                     }
+
 
                     @Override
                     public void onChildChanged(@NonNull DataSnapshot snapshot, String previousChildName) {

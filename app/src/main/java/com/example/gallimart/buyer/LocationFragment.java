@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -15,6 +17,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.example.gallimart.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -37,7 +40,9 @@ public class LocationFragment extends Fragment {
     private DatabaseReference shopsRef, usersRef;
     private FusedLocationProviderClient fusedLocationClient;
     private Location buyerLocation;
-    private static final float MAX_DISTANCE_KM = 7f; // 7 km radius
+    private static final float MAX_DISTANCE_KM = 7f;
+
+    private LottieAnimationView lottieLoadingShops;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -46,6 +51,11 @@ public class LocationFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_location_buyer, container, false);
 
+        // Fly-in animation for the entire fragment
+        Animation flyIn = AnimationUtils.loadAnimation(getContext(), R.anim.fly_in);
+        view.startAnimation(flyIn);
+
+        // RecyclerView setup
         rvNearbyShops = view.findViewById(R.id.rvNearbyShops);
         rvNearbyShops.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -53,9 +63,12 @@ public class LocationFragment extends Fragment {
             BuyerDashboardActivity activity = (BuyerDashboardActivity) requireActivity();
             activity.showInventoryForShop(shop.getShopId());
         });
-
         rvNearbyShops.setAdapter(adapter);
 
+        // Lottie animation
+        lottieLoadingShops = view.findViewById(R.id.lottieLoadingShops);
+
+        // Firebase & location
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         shopsRef = FirebaseDatabase.getInstance().getReference("shops");
         usersRef = FirebaseDatabase.getInstance().getReference("users");
@@ -65,9 +78,6 @@ public class LocationFragment extends Fragment {
         return view;
     }
 
-    /**
-     * 🔹 First check if buyer has an address saved in Firebase
-     */
     private void checkBuyerAddress() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
@@ -79,17 +89,15 @@ public class LocationFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(snapshot -> {
                     if (snapshot.exists()) {
-                        // ✅ Address exists → proceed to get location and fetch shops
                         getBuyerLocationAndFetchShops();
                     } else {
-                        // ❌ No address → redirect to AddressFragment
                         Toast.makeText(getContext(),
                                 "Please add your address before browsing shops",
                                 Toast.LENGTH_LONG).show();
 
                         requireActivity().getSupportFragmentManager()
                                 .beginTransaction()
-                                .replace(R.id.fragment_container, new AddressFragment()) // container id of your activity
+                                .replace(R.id.fragment_container, new AddressFragment())
                                 .addToBackStack(null)
                                 .commit();
                     }
@@ -110,6 +118,8 @@ public class LocationFragment extends Fragment {
             return;
         }
 
+        lottieLoadingShops.setVisibility(View.VISIBLE);
+
         fusedLocationClient.getLastLocation().addOnSuccessListener(requireActivity(), new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
@@ -117,6 +127,7 @@ public class LocationFragment extends Fragment {
                     buyerLocation = location;
                     fetchNearbyShops();
                 } else {
+                    lottieLoadingShops.setVisibility(View.GONE);
                     Toast.makeText(getContext(), "Unable to get your location", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -124,10 +135,13 @@ public class LocationFragment extends Fragment {
     }
 
     private void fetchNearbyShops() {
-        shopsRef.addValueEventListener(new com.google.firebase.database.ValueEventListener() {
+        lottieLoadingShops.setVisibility(View.VISIBLE);
+
+        shopsRef.addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 shopList.clear();
+
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     Shop shop = ds.getValue(Shop.class);
                     if (shop != null && shop.getLat() != 0 && shop.getLng() != 0) {
@@ -142,11 +156,14 @@ public class LocationFragment extends Fragment {
                         }
                     }
                 }
+
                 adapter.notifyDataSetChanged();
+                lottieLoadingShops.setVisibility(View.GONE);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
+                lottieLoadingShops.setVisibility(View.GONE);
                 Toast.makeText(getContext(), "Firebase fetch error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
