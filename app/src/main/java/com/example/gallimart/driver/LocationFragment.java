@@ -78,7 +78,7 @@ public class LocationFragment extends Fragment {
     private DatabaseReference userRef, ordersRef;
     private String driverId, assignedOrderId;
 
-    private Button btnAcceptOrder, btnRejectOrder, btnMarkDelivered, btnUploadPhoto;
+    private Button btnAcceptOrder, btnRejectOrder, btnMarkDelivered, btnUploadPhoto, btnDirections;
     private Double currentShopLat = null, currentShopLng = null;
     private Double currentBuyerLat = null, currentBuyerLng = null;
 
@@ -111,6 +111,7 @@ public class LocationFragment extends Fragment {
         btnRejectOrder = view.findViewById(R.id.btnRejectOrderDriver);
         btnMarkDelivered = view.findViewById(R.id.btnMarkDelivered);
         btnUploadPhoto = view.findViewById(R.id.btnUploadPhoto);
+        btnDirections = view.findViewById(R.id.btnDirections);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
@@ -132,6 +133,7 @@ public class LocationFragment extends Fragment {
         btnRejectOrder.setOnClickListener(v -> rejectAssignedOrder());
         btnMarkDelivered.setOnClickListener(v -> markOrderDelivered());
         btnUploadPhoto.setOnClickListener(v -> selectDeliveryPhoto());
+        btnDirections.setOnClickListener(v -> openGoogleMapsDirections());
 
         return view;
     }
@@ -204,6 +206,7 @@ public class LocationFragment extends Fragment {
                     btnRejectOrder.setVisibility(View.GONE);
                     btnMarkDelivered.setVisibility(View.VISIBLE);
                     btnUploadPhoto.setVisibility(View.VISIBLE);
+                    btnDirections.setVisibility(View.VISIBLE);
 
                     ordersRef.child(assignedOrderId).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -221,6 +224,7 @@ public class LocationFragment extends Fragment {
                     btnRejectOrder.setVisibility(View.VISIBLE);
                     btnMarkDelivered.setVisibility(View.GONE);
                     btnUploadPhoto.setVisibility(View.GONE);
+                    btnDirections.setVisibility(View.GONE);
                 }
             }
 
@@ -456,6 +460,29 @@ public class LocationFragment extends Fragment {
                 * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
+    }
+
+    /** --- OPEN GOOGLE MAPS DIRECTIONS --- **/
+    private void openGoogleMapsDirections() {
+        if (currentShopLat == null || currentShopLng == null || currentBuyerLat == null || currentBuyerLng == null) {
+            Toast.makeText(getContext(), "Coordinates not ready yet", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Use Google Maps directions with origin (shop) and destination (buyer)
+        String uri = String.format(Locale.ENGLISH,
+                "https://www.google.com/maps/dir/?api=1&origin=%f,%f&destination=%f,%f&travelmode=driving",
+                currentShopLat, currentShopLng, currentBuyerLat, currentBuyerLng);
+
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        intent.setPackage("com.google.android.apps.maps");
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            // Fallback if Google Maps app is not installed
+            Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            startActivity(webIntent);
+        }
     }
 
     @Override

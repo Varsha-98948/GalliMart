@@ -2,71 +2,112 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp">
+    android:background="@android:color/white"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
 
+        <!-- Logo -->
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_app_logo"
+            android:contentDescription="App Logo"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Title -->
         <TextView
-            android:id="@+id/tvRegisterTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Register"
+            android:text="Create Account"
             android:textSize="24sp"
-            android:layout_gravity="center"
-            android:paddingBottom="12dp" />
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:layout_marginBottom="24dp" />
 
+        <!-- Name -->
         <EditText
             android:id="@+id/etName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Full Name" />
+            android:hint="Full Name"
+            android:background="@drawable/edittext_bg"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:textColor="@android:color/black"
+            android:textColorHint="@android:color/darker_gray" />
 
+        <!-- Email -->
         <EditText
             android:id="@+id/etEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textEmailAddress"
             android:hint="Email"
-            android:layout_marginTop="8dp"/>
+            android:inputType="textEmailAddress"
+            android:background="@drawable/edittext_bg"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:textColor="@android:color/black"
+            android:textColorHint="@android:color/darker_gray" />
 
+        <!-- Phone -->
         <EditText
             android:id="@+id/etPhone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:hint="Phone"
             android:inputType="phone"
-            android:hint="Phone (optional)"
-            android:layout_marginTop="8dp"/>
+            android:background="@drawable/edittext_bg"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:textColor="@android:color/black"
+            android:textColorHint="@android:color/darker_gray" />
 
+        <!-- Password -->
         <EditText
             android:id="@+id/etPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword"
             android:hint="Password"
-            android:layout_marginTop="8dp"/>
+            android:inputType="textPassword"
+            android:background="@drawable/edittext_bg"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:textColor="@android:color/black"
+            android:textColorHint="@android:color/darker_gray" />
 
+        <!-- Role Spinner -->
         <Spinner
             android:id="@+id/spinnerRole"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"/>
+            android:layout_marginBottom="24dp" />
 
+        <!-- Register Button -->
         <Button
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Register"
-            android:layout_marginTop="16dp"/>
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/red"
+            android:padding="12dp"
+            android:elevation="4dp"
+            android:layout_marginBottom="16dp" />
 
+        <!-- Already have account -->
         <TextView
             android:id="@+id/tvHaveAccount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Already have an account? Login"
-            android:layout_marginTop="16dp"/>
+            android:textColor="@android:color/black"
+            android:textSize="14sp" />
 
     </LinearLayout>
 </ScrollView>

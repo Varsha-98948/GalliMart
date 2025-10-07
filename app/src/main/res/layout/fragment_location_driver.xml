@@ -54,6 +54,20 @@
             android:background="@drawable/rounded_button" />
     </LinearLayout>
 
+    <!-- Directions Button -->
+    <Button
+        android:id="@+id/btnDirections"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Directions"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/colorPrimary"
+        android:padding="12dp"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone"
+        android:stateListAnimator="@null"
+        android:background="@drawable/rounded_button" />
+
     <!-- Delivery Photo / Mark Delivered -->
     <LinearLayout
         android:layout_width="match_parent"
