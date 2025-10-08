@@ -45,61 +45,76 @@ public class BuyerOrdersAdapter extends RecyclerView.Adapter<BuyerOrdersAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         final Order order = orderList.get(position);
+        if (order == null) return;
 
-        // Fetch shop name dynamically
-        DatabaseReference shopRef = FirebaseDatabase.getInstance()
-                .getReference("shops")
-                .child(order.shopId);
-        shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String shopName = snapshot.child("name").getValue(String.class);
-                if (shopName != null && !shopName.isEmpty()) {
-                    holder.txtShop.setText("Shop: " + shopName);
-                } else {
+        // === SHOP NAME ===
+        if (order.shopId != null && !order.shopId.isEmpty()) {
+            DatabaseReference shopRef = FirebaseDatabase.getInstance()
+                    .getReference("shops")
+                    .child(order.shopId);
+
+            // Use addListenerForSingleValueEvent to avoid memory leaks
+            shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    String shopName = snapshot.child("name").getValue(String.class);
+                    if (shopName != null && !shopName.isEmpty()) {
+                        holder.txtShop.setText("Shop: " + shopName);
+                    } else {
+                        holder.txtShop.setText("Shop ID: " + order.shopId);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.w("BuyerOrdersAdapter", "Failed to fetch shop name", error.toException());
                     holder.txtShop.setText("Shop ID: " + order.shopId);
                 }
-            }
+            });
+        } else {
+            holder.txtShop.setText("Unknown Shop");
+        }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.w("BuyerOrdersAdapter", "Failed to fetch shop name", error.toException());
-                holder.txtShop.setText("Shop ID: " + order.shopId);
-            }
-        });
+        // === STATUS ===
+        String statusText = (order.status != null && !order.status.isEmpty())
+                ? order.status
+                : "Pending";
+        holder.txtStatus.setText("Status: " + statusText);
 
-        // Order status
-        holder.txtStatus.setText("Status: " + (order.status != null ? order.status : "Pending"));
-
-        // Order items
+        // === ITEMS ===
         if (order.items != null && !order.items.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             for (com.example.gallimart.SessionManager.CartItem item : order.items) {
-                sb.append(item.name).append(" (x").append(item.quantity).append("), ");
+                sb.append(item.name)
+                        .append(" (x")
+                        .append(item.quantity)
+                        .append("), ");
             }
-            if (sb.length() > 2) sb.setLength(sb.length() - 2);
+            if (sb.length() > 2) sb.setLength(sb.length() - 2); // Remove last comma
             holder.txtItems.setText(sb.toString());
         } else {
             holder.txtItems.setText("No items");
         }
 
-        // Click listener
-        holder.itemView.setOnClickListener(v -> listener.onOrderClick(order));
+        // === CLICK LISTENER ===
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onOrderClick(order);
+        });
 
-        // Item animation: fade + slide up
+        // === ANIMATION ===
         holder.itemView.setAlpha(0f);
         holder.itemView.setTranslationY(50f);
         holder.itemView.animate()
                 .alpha(1f)
                 .translationY(0f)
                 .setDuration(300)
-                .setStartDelay(position * 50L)
+                .setStartDelay(position * 40L)
                 .start();
     }
 
     @Override
     public int getItemCount() {
-        return orderList.size();
+        return orderList != null ? orderList.size() : 0;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

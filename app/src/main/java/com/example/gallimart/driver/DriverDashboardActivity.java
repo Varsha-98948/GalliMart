@@ -43,9 +43,6 @@ public class DriverDashboardActivity extends AppCompatActivity {
             if (id == R.id.nav_locations) {
                 fragment = new LocationFragment();
                 title = "Locations";
-            } else if (id == R.id.nav_delivery) {
-                fragment = new DeliveryFragment();
-                title = "Delivery";
             } else if (id == R.id.nav_orders) {
                 fragment = new OrdersFragment();
                 title = "Orders";

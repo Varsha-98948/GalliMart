@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/progressLayout"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/tvOrderStatusLabel"
+        android:text="Order Progress"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:layout_marginBottom="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:id="@+id/stagesContainer"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- PLACED -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content">
+            <View
+                android:id="@+id/dotPlaced"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:background="@drawable/progress_dot_inactive" />
+            <TextView
+                android:text="Placed"
+                android:textSize="12sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- CONFIRMED -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content">
+            <View
+                android:id="@+id/dotConfirmed"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:background="@drawable/progress_dot_inactive" />
+            <TextView
+                android:text="Confirmed"
+                android:textSize="12sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- DRIVER AT SHOP -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content">
+            <View
+                android:id="@+id/dotDriverShop"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:background="@drawable/progress_dot_inactive" />
+            <TextView
+                android:text="At Shop"
+                android:textSize="12sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- DRIVER NEAR BUYER -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content">
+            <View
+                android:id="@+id/dotDriverBuyer"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:background="@drawable/progress_dot_inactive" />
+            <TextView
+                android:text="Near You"
+                android:textSize="12sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- DELIVERED -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content">
+            <View
+                android:id="@+id/dotDelivered"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:background="@drawable/progress_dot_inactive" />
+            <TextView
+                android:text="Delivered"
+                android:textSize="12sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>

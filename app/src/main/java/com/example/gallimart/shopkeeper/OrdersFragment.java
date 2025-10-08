@@ -24,6 +24,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -181,8 +182,12 @@ public class OrdersFragment extends Fragment {
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(getContext(), "Order " + newStatus, Toast.LENGTH_SHORT).show();
 
-                    if (newStatus.equals("ACCEPTED")) {
-                        // Fetch shop location
+                    if (newStatus.equals("CONFIRMED")) { // Update inventory only when confirmed
+                        updateInventoryInFirebase(order);
+                    }
+
+                    if (newStatus.equals("CONFIRMED")) {
+                        // Fetch shop location for driver assignment
                         DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("shops");
                         shopsRef.child(order.shopId).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
@@ -204,6 +209,61 @@ public class OrdersFragment extends Fragment {
                 })
                 .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update order", Toast.LENGTH_SHORT).show());
     }
+
+    private void updateInventoryInFirebase(Order order) {
+        DatabaseReference itemsRef = FirebaseDatabase.getInstance()
+                .getReference("shops")
+                .child(order.shopId)
+                .child("items");
+
+        // Fetch order items directly from Firebase
+        ordersRef.child(order.orderId).child("items")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (!snapshot.exists()) return;
+
+                        for (DataSnapshot orderItemSnap : snapshot.getChildren()) {
+                            String itemId = orderItemSnap.child("id").getValue(String.class);
+                            Long orderedQtyLong = orderItemSnap.child("quantity").getValue(Long.class);
+                            int orderedQty = orderedQtyLong != null ? orderedQtyLong.intValue() : 0;
+
+                            if (itemId != null && orderedQty > 0) {
+                                // Use transaction to safely update stock
+                                itemsRef.child(itemId).child("quantity").runTransaction(new com.google.firebase.database.Transaction.Handler() {
+                                    @NonNull
+                                    @Override
+                                    public com.google.firebase.database.Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                                        Long currentQtyLong = currentData.getValue(Long.class);
+                                        int currentQty = currentQtyLong != null ? currentQtyLong.intValue() : 0;
+                                        int newQty = currentQty - orderedQty;
+                                        if (newQty < 0) newQty = 0; // prevent negative
+                                        currentData.setValue(newQty);
+                                        return com.google.firebase.database.Transaction.success(currentData);
+                                    }
+
+                                    @Override
+                                    public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot snapshot) {
+                                        if (committed) {
+                                            Log.d("InventoryUpdate", "Item " + itemId + " updated successfully.");
+                                        } else {
+                                            Log.e("InventoryUpdate", "Failed to update item " + itemId + ": " + (error != null ? error.getMessage() : ""));
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(getContext(), "Failed to fetch order items: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+
+
 
     private void assignDriverToOrder(Order order, double shopLat, double shopLng) {
         DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");

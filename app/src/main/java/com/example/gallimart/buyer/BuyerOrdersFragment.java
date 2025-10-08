@@ -55,13 +55,14 @@ public class BuyerOrdersFragment extends Fragment implements BuyerOrdersAdapter.
         adapter = new BuyerOrdersAdapter(orderList, this);
         rvOrders.setAdapter(adapter);
 
+        // Get current logged-in buyer
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
             Toast.makeText(getContext(), "Not logged in", Toast.LENGTH_SHORT).show();
             return view;
         }
-
         buyerId = user.getUid();
+
         ordersRef = FirebaseDatabase.getInstance().getReference("orders");
 
         fetchBuyerOrders();
@@ -70,11 +71,40 @@ public class BuyerOrdersFragment extends Fragment implements BuyerOrdersAdapter.
     }
 
     private void fetchBuyerOrders() {
-        ordersRef.orderByChild("buyerId").equalTo(buyerId)
-                .addValueEventListener(new ValueEventListener() {
+        orderList.clear();
+        lottieEmpty.setVisibility(View.GONE); // hide initially
+
+        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+
+        // Fetch from "orders" node
+        database.child("orders").orderByChild("buyerId").equalTo(buyerId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        orderList.clear();
+                        for (DataSnapshot orderSnap : snapshot.getChildren()) {
+                            Order order = orderSnap.getValue(Order.class);
+                            if (order != null) {
+                                order.orderId = orderSnap.getKey();
+                                orderList.add(order);
+                            }
+                        }
+                        // After fetching "orders", fetch "completedOrders"
+                        fetchCompletedOrders(database);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.w(TAG, "fetch orders cancelled: " + error);
+                        fetchCompletedOrders(database); // still fetch completedOrders
+                    }
+                });
+    }
+
+    private void fetchCompletedOrders(DatabaseReference database) {
+        database.child("completedOrders").orderByChild("buyerId").equalTo(buyerId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
                         for (DataSnapshot orderSnap : snapshot.getChildren()) {
                             Order order = orderSnap.getValue(Order.class);
                             if (order != null) {
@@ -83,18 +113,14 @@ public class BuyerOrdersFragment extends Fragment implements BuyerOrdersAdapter.
                             }
                         }
                         adapter.notifyDataSetChanged();
-
-                        // Show Lottie if empty
-                        if (orderList.isEmpty()) {
-                            lottieEmpty.setVisibility(View.VISIBLE);
-                        } else {
-                            lottieEmpty.setVisibility(View.GONE);
-                        }
+                        lottieEmpty.setVisibility(orderList.isEmpty() ? View.VISIBLE : View.GONE);
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
-                        Log.w(TAG, "fetchBuyerOrders cancelled: " + error);
+                        Log.w(TAG, "fetch completedOrders cancelled: " + error);
+                        adapter.notifyDataSetChanged();
+                        lottieEmpty.setVisibility(orderList.isEmpty() ? View.VISIBLE : View.GONE);
                     }
                 });
     }

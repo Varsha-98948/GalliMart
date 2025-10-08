@@ -25,6 +25,12 @@
         android:layout_marginTop="?attr/actionBarSize"
         android:layout_marginBottom="72dp"/>
 
+    <FrameLayout
+        android:id="@+id/fragment_detail_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/> <!-- initially hidden -->
+
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"

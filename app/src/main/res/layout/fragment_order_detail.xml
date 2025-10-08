@@ -4,6 +4,13 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <include
+        layout="@layout/view_order_progress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+
+
     <org.osmdroid.views.MapView
         android:id="@+id/mapViewDetail"
         android:layout_width="match_parent"

@@ -136,13 +136,7 @@ public class LocationFragment extends Fragment {
 
             @Override
             public void onDirections(String orderId, Double lat, Double lng) {
-                // If lat/lng not directly provided, use the fragment’s stored buyer coordinates
-                if ((lat == null || lng == null || lat == 0.0 || lng == 0.0) &&
-                        currentBuyerLat != null && currentBuyerLng != null) {
-                    lat = currentBuyerLat;
-                    lng = currentBuyerLng;
-                }
-                openGoogleMaps(lat, lng);
+                openDirectionsToShopThenBuyer();
             }
 
 
@@ -208,6 +202,8 @@ public class LocationFragment extends Fragment {
             ordersRef.child(assignedOrderId).child("driverLocation/lat").setValue(lat);
             ordersRef.child(assignedOrderId).child("driverLocation/lng").setValue(lng);
         }
+
+        checkProximityToShopAndBuyer(lat,lng);
 
         requireActivity().runOnUiThread(() -> {
             if (driverMarker == null) {
@@ -347,6 +343,32 @@ public class LocationFragment extends Fragment {
                         Log.e(TAG, "Available orders listener cancelled: " + error.getMessage());
                     }
                 });
+    }
+
+    private void markAtShop(String orderId) {
+        if (orderId == null) return;
+        ordersRef.child(orderId).child("driverStatus").setValue("AT_SHOP");
+    }
+
+    private void markAtBuyer(String orderId) {
+        if (orderId == null) return;
+        ordersRef.child(orderId).child("driverStatus").setValue("AT_BUYER");
+    }
+
+    private void checkProximityToShopAndBuyer(double lat, double lng) {
+        if (currentShopLat != null && currentShopLng != null) {
+            double distToShop = calculateDistanceKm(lat, lng, currentShopLat, currentShopLng);
+            if (distToShop <= 0.05) { // ~50 meters
+                markAtShop(assignedOrderId);
+            }
+        }
+
+        if (currentBuyerLat != null && currentBuyerLng != null) {
+            double distToBuyer = calculateDistanceKm(lat, lng, currentBuyerLat, currentBuyerLng);
+            if (distToBuyer <= 0.05) { // ~50 meters
+                markAtBuyer(assignedOrderId);
+            }
+        }
     }
 
 
@@ -627,6 +649,54 @@ public class LocationFragment extends Fragment {
             Toast.makeText(getContext(), "Unable to open Google Maps", Toast.LENGTH_SHORT).show();
         }
     }
+
+    /** --- NEW METHOD: Directions Driver→Shop→Buyer --- **/
+    private void openDirectionsToShopThenBuyer() {
+        if (currentShopLat == null || currentShopLng == null) {
+            Toast.makeText(getContext(), "Shop location not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (currentBuyerLat == null || currentBuyerLng == null) {
+            Toast.makeText(getContext(), "Buyer location not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            // 1️⃣ Open Google Maps for driver → shop
+            Uri shopUri = Uri.parse("google.navigation:q=" + currentShopLat + "," + currentShopLng + "&mode=d");
+            Intent shopIntent = new Intent(Intent.ACTION_VIEW, shopUri);
+            shopIntent.setPackage("com.google.android.apps.maps");
+
+            // Verify Maps app exists
+            if (shopIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
+                startActivity(shopIntent);
+
+                // 2️⃣ After short delay, open driver → buyer directions
+                // (so when driver presses back after reaching shop, next route opens)
+                new android.os.Handler().postDelayed(() -> {
+                    try {
+                        Uri buyerUri = Uri.parse("google.navigation:q=" + currentBuyerLat + "," + currentBuyerLng + "&mode=d");
+                        Intent buyerIntent = new Intent(Intent.ACTION_VIEW, buyerUri);
+                        buyerIntent.setPackage("com.google.android.apps.maps");
+                        startActivity(buyerIntent);
+                    } catch (Exception e2) {
+                        Log.e(TAG, "Error opening buyer directions", e2);
+                        Toast.makeText(getContext(), "Couldn't open buyer route", Toast.LENGTH_SHORT).show();
+                    }
+                }, 3000); // 3-second delay before auto-opening buyer route (optional)
+            } else {
+                // fallback: browser
+                Uri webUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=" + currentShopLat + "," + currentShopLng);
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, webUri);
+                startActivity(browserIntent);
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error opening Google Maps route", e);
+            Toast.makeText(getContext(), "Unable to open directions", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     /** --- PHOTO / CAPTURE --- **/
     private void captureDeliveryPhoto(String orderId) {
