@@ -265,6 +265,8 @@ public class LocationFragment extends Fragment {
                                 if (driverLat == null || driverLng == null) return;
 
                                 for (DataSnapshot orderSnap : snapshot.getChildren()) {
+                                    String orderId = orderSnap.getKey();
+                                    if (orderId == null || orderId.trim().isEmpty()) continue; // ✅ skip null order IDs
                                     String drvStatus = orderSnap.child("driverStatus").getValue(String.class);
                                     if (drvStatus != null && !drvStatus.isEmpty()) continue;
 
@@ -396,6 +398,11 @@ public class LocationFragment extends Fragment {
                     currentOrderListener = new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot orderSnap) {
+                            if (assignedOrderId == null || assignedOrderId.trim().isEmpty()) {
+                                clearLocalOrderState();
+                                return;
+                            }
+
                             if (!orderSnap.exists()) {
                                 locationList.clear();
                                 adapter.notifyDataSetChanged();

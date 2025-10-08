@@ -145,24 +145,42 @@ public class CartFragment extends Fragment {
     }
 
     private void placeOrder(FirebaseUser user, String shopId) {
-        String orderId = "ORD_" + System.currentTimeMillis();
-        Order order = new Order(
-                orderId,
-                user.getUid(),
-                user.getDisplayName() != null ? user.getDisplayName() : user.getEmail(),
-                shopId,
-                new ArrayList<>(cartItems),
-                totalPrice,
-                "PLACED",
-                "",
-                System.currentTimeMillis()
-        );
+        DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users").child(user.getUid());
 
-        saveOrderToBackend(order);
-        session.clearCart();
-        refreshCart();
-        Toast.makeText(getContext(), "Payment Successful! Order Placed.", Toast.LENGTH_LONG).show();
+        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String buyerName = snapshot.child("name").getValue(String.class);
+                if (buyerName == null || buyerName.isEmpty()) {
+                    buyerName = user.getEmail(); // fallback
+                }
+
+                String orderId = "ORD_" + System.currentTimeMillis();
+                Order order = new Order(
+                        orderId,
+                        user.getUid(),
+                        buyerName,
+                        shopId,
+                        new ArrayList<>(cartItems),
+                        totalPrice,
+                        "PLACED",
+                        "",
+                        System.currentTimeMillis()
+                );
+
+                saveOrderToBackend(order);
+                session.clearCart();
+                refreshCart();
+                Toast.makeText(getContext(), "Payment Successful! Order Placed.", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(getContext(), "Failed to fetch user name: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
 
     private void saveOrderToBackend(Order order) {
         ordersRef.child(order.orderId)
