@@ -21,8 +21,6 @@ import androidx.fragment.app.Fragment;
 import com.example.gallimart.R;
 import com.example.gallimart.SessionManager;
 import com.example.gallimart.login.LoginActivity;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.material.card.MaterialCardView;
 
 import org.osmdroid.config.Configuration;
@@ -45,8 +43,6 @@ public class ProfileFragment extends Fragment {
     private MaterialCardView optionOrders, optionSaveLocation, optionHelp;
     private SessionManager sessionManager;
 
-    private DatabaseReference shopRef;
-
     public ProfileFragment() {}
 
     @Nullable
@@ -59,7 +55,8 @@ public class ProfileFragment extends Fragment {
 
         sessionManager = new SessionManager(getContext());
 
-        ivProfile = view.findViewById(R.id.ivProfile);
+        // Bind views
+        ivProfile = view.findViewById(R.id.ivProfileShopkeeper);
         tvName = view.findViewById(R.id.tvNameShopkeeper);
         tvEmail = view.findViewById(R.id.tvEmailShopkeeper);
         tvRole = view.findViewById(R.id.tvRoleShopkeeper);
@@ -71,7 +68,7 @@ public class ProfileFragment extends Fragment {
         btnLogout = view.findViewById(R.id.btnLogoutShopkeeper);
 
         loadUserDetails();
-        runFadeInAnimations(view);
+        runFadeInAnimations();
 
         setupClicks();
 
@@ -92,7 +89,6 @@ public class ProfileFragment extends Fragment {
         });
 
         optionOrders.setOnClickListener(v -> {
-            // Navigate to ShopkeeperOrdersFragment
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.fragment_container, new OrdersFragment())
@@ -101,10 +97,8 @@ public class ProfileFragment extends Fragment {
         });
 
         optionHelp.setOnClickListener(v -> {
-            // Show help dialog
-            androidx.appcompat.app.AlertDialog.Builder builder =
-                    new androidx.appcompat.app.AlertDialog.Builder(requireContext());
-            builder.setTitle("Help & Support")
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Help & Support")
                     .setMessage("Contact us at:\ngallimart.contact@gmail.com")
                     .setPositiveButton("OK", null)
                     .show();
@@ -113,7 +107,7 @@ public class ProfileFragment extends Fragment {
         optionSaveLocation.setOnClickListener(v -> showShopLocationDialog());
     }
 
-    private void runFadeInAnimations(View root) {
+    private void runFadeInAnimations() {
         int delay = 100;
         fadeInView(ivProfile, delay);
         fadeInView(tvName, delay + 200);
@@ -140,7 +134,7 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        shopRef = FirebaseDatabase.getInstance().getReference("shops").child(shopId);
+        DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference("shops").child(shopId);
         shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -152,29 +146,34 @@ public class ProfileFragment extends Fragment {
                     return;
                 }
 
-                // Show dialog with OSMDroid MapView
-                androidx.appcompat.app.AlertDialog.Builder builder =
-                        new androidx.appcompat.app.AlertDialog.Builder(requireContext());
-                View mapViewDialog = getLayoutInflater().inflate(R.layout.dialog_map, null);
-                MapView map = mapViewDialog.findViewById(R.id.dialogMapView);
-                map.setTileSource(TileSourceFactory.MAPNIK);
-                map.setMultiTouchControls(true);
-                map.getController().setZoom(16.0);
-                GeoPoint point = new GeoPoint(lat, lng);
+                // Inflate map dialog
+                View mapDialogView = getLayoutInflater().inflate(R.layout.dialog_map, null);
+                MapView mapView = mapDialogView.findViewById(R.id.dialogMapView);
 
-                Marker marker = new Marker(map);
-                marker.setPosition(point);
+                Configuration.getInstance().load(requireContext(),
+                        android.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()));
+                mapView.setTileSource(TileSourceFactory.MAPNIK);
+                mapView.setMultiTouchControls(true);
+                mapView.getController().setZoom(16.0);
+
+                GeoPoint shopPoint = new GeoPoint(lat, lng);
+                Marker marker = new Marker(mapView);
+                marker.setPosition(shopPoint);
                 marker.setTitle("Your Shop");
-                map.getOverlays().add(marker);
-                map.getController().setCenter(point);
+                mapView.getOverlays().add(marker);
+                mapView.getController().setCenter(shopPoint);
 
-                builder.setView(mapViewDialog)
+                new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Shop Location")
+                        .setView(mapDialogView)
                         .setPositiveButton("OK", null)
                         .show();
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(getContext(), "Failed to fetch shop location.", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 }

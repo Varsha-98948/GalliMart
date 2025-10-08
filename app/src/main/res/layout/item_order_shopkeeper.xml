@@ -1,58 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    android:elevation="6dp"
-    android:padding="12dp"
-    android:backgroundTint="@android:color/white">
+    android:layout_margin="12dp"
+    android:backgroundTint="@android:color/white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    android:clickable="true"
+    android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
         android:orientation="vertical"
+        android:padding="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- Buyer Name -->
         <TextView
-            android:id="@+id/tvOrderIdShopkeeper"
-            android:text="Order ID: #12345"
+            android:id="@+id/tvBuyerShopkeeper"
+            android:text="John Doe"
             android:textStyle="bold"
-            android:textSize="16sp"
-            android:textColor="@color/colorPrimary"
+            android:textSize="20sp"
+            android:textColor="@color/dark_navy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
+        <!-- Order ID -->
         <TextView
-            android:id="@+id/tvBuyerShopkeeper"
-            android:text="Buyer: John Doe"
-            android:textColor="@color/colorSecondary"
+            android:id="@+id/tvOrderIdShopkeeper"
+            android:text="Order ID: #12345"
+            android:textSize="14sp"
+            android:textColor="@color/red"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"/>
 
+        <!-- Status Badge -->
         <TextView
             android:id="@+id/tvOrderStatusShopkeeper"
-            android:text="Status: PENDING"
-            android:textStyle="italic"
-            android:textColor="@color/black"
+            android:text="PENDING"
+            android:textStyle="bold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:paddingBottom="8dp"/>
+            android:layout_marginTop="8dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:background="@drawable/status_pending"
+            android:textColor="@android:color/white"/>
 
+        <!-- Accept / Reject Buttons -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="12dp">
 
             <Button
                 android:id="@+id/btnAcceptOrder"
                 android:text="Accept"
-                android:backgroundTint="@color/green"
+                android:backgroundTint="@color/dark_navy"
                 android:textColor="@android:color/white"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"/>
+                android:layout_marginEnd="12dp"
+                android:elevation="2dp"
+                android:stateListAnimator="@null"/>
 
             <Button
                 android:id="@+id/btnRejectOrder"
@@ -60,9 +75,10 @@
                 android:backgroundTint="@color/red"
                 android:textColor="@android:color/white"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:elevation="2dp"
+                android:stateListAnimator="@null"/>
         </LinearLayout>
 
     </LinearLayout>
-
 </com.google.android.material.card.MaterialCardView>

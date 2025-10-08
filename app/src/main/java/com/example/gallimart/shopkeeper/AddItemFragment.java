@@ -30,6 +30,7 @@ public class AddItemFragment extends Fragment {
     private static final int PICK_IMAGE = 100;
     private EditText etName, etPrice, etQuantity, etDescription;
     private ImageView ivPreview;
+    private Button btnChooseImage, btnSubmit;
     private Uri selectedImage;
     private DatabaseReference firebaseRef;
     private String shopId;
@@ -46,17 +47,16 @@ public class AddItemFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_add_item, container, false);
 
-        // Bind UI elements
+        // Bind UI
         etName = view.findViewById(R.id.etName);
         etPrice = view.findViewById(R.id.etPrice);
         etQuantity = view.findViewById(R.id.etQuantity);
         etDescription = view.findViewById(R.id.etDescription);
         ivPreview = view.findViewById(R.id.ivPreview);
+        btnChooseImage = view.findViewById(R.id.btnChooseImage);
+        btnSubmit = view.findViewById(R.id.btnSubmit);
 
-        Button btnChooseImage = view.findViewById(R.id.btnChooseImage);
-        Button btnSubmit = view.findViewById(R.id.btnSubmit);
-
-        // Get shopId from SessionManager or arguments
+        // Load shopId
         SessionManager sm = new SessionManager(requireContext());
         shopId = sm.getShopId();
         if (shopId == null) {
@@ -68,10 +68,13 @@ public class AddItemFragment extends Fragment {
                     .child("items");
         }
 
+        // Fade-in animation
+        animateViews(etName, etPrice, etQuantity, etDescription, ivPreview, btnChooseImage, btnSubmit);
+
         // Image picker
         btnChooseImage.setOnClickListener(v -> pickImage());
 
-        // Submit button
+        // Submit item
         btnSubmit.setOnClickListener(v -> uploadItem());
 
         return view;
@@ -177,6 +180,20 @@ public class AddItemFragment extends Fragment {
 
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Fade-in animation helper
+    private void animateViews(View... views) {
+        int delay = 0;
+        for (View v : views) {
+            v.setAlpha(0f);
+            v.animate()
+                    .alpha(1f)
+                    .setDuration(400)
+                    .setStartDelay(delay)
+                    .start();
+            delay += 150;
         }
     }
 }
