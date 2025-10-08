@@ -136,8 +136,15 @@ public class LocationFragment extends Fragment {
 
             @Override
             public void onDirections(String orderId, Double lat, Double lng) {
+                // If lat/lng not directly provided, use the fragment’s stored buyer coordinates
+                if ((lat == null || lng == null || lat == 0.0 || lng == 0.0) &&
+                        currentBuyerLat != null && currentBuyerLng != null) {
+                    lat = currentBuyerLat;
+                    lng = currentBuyerLng;
+                }
                 openGoogleMaps(lat, lng);
             }
+
 
             @Override
             public void onShowRoute(String orderId, Double shopLat, Double shopLng, Double buyerLat, Double buyerLng) {
@@ -246,37 +253,93 @@ public class LocationFragment extends Fragment {
 
     // Listen for available (unassigned/new) orders so that new ones show automatically
     private void listenForAvailableOrders() {
-        // If driver has no currentOrderId (not assigned), listen for orders with status "PLACED" (or "NEW")
         ordersRef.orderByChild("status").equalTo("CONFIRMED")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        // only show available orders if driver has no assigned order
                         if (assignedOrderId != null && !assignedOrderId.isEmpty()) return;
 
                         locationList.clear();
-                        for (DataSnapshot orderSnap : snapshot.getChildren()) {
-                            // skip orders already accepted by someone else
-                            String drvStatus = orderSnap.child("driverStatus").getValue(String.class);
-                            String drvId = orderSnap.child("driverId").getValue(String.class);
-                            // show only if not already taken by any driver
-                            if (drvStatus != null && !"".equals(drvStatus) && !"REJECTED".equalsIgnoreCase(drvStatus)) {
-                                continue;
+
+                        userRef.child("address").addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot driverAddrSnap) {
+                                Double driverLat = driverAddrSnap.child("lat").getValue(Double.class);
+                                Double driverLng = driverAddrSnap.child("lng").getValue(Double.class);
+                                if (driverLat == null || driverLng == null) return;
+
+                                for (DataSnapshot orderSnap : snapshot.getChildren()) {
+                                    String drvStatus = orderSnap.child("driverStatus").getValue(String.class);
+                                    if (drvStatus != null && !drvStatus.isEmpty()) continue;
+
+                                    String shopId = orderSnap.child("shopId").getValue(String.class);
+                                    String buyerId = orderSnap.child("buyerId").getValue(String.class);
+                                    if (shopId == null || buyerId == null) continue;
+
+                                    shopsRef.child(shopId).addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot shopSnap) {
+                                            Double shopLat = shopSnap.child("lat").getValue(Double.class);
+                                            Double shopLng = shopSnap.child("lng").getValue(Double.class);
+                                            if (shopLat == null || shopLng == null) return;
+
+                                            // Fetch buyer coordinates
+                                            FirebaseDatabase.getInstance().getReference("users")
+                                                    .child(buyerId).child("address")
+                                                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                                                        @Override
+                                                        public void onDataChange(@NonNull DataSnapshot buyerAddrSnap) {
+                                                            Double buyerLat = buyerAddrSnap.child("lat").getValue(Double.class);
+                                                            Double buyerLng = buyerAddrSnap.child("lng").getValue(Double.class);
+
+                                                            double distKm = calculateDistanceKm(driverLat, driverLng, shopLat, shopLng);
+
+                                                            if (distKm <= 7.0) { // within 7 km only
+                                                                Order order = orderSnap.getValue(Order.class);
+                                                                if (order != null && order.items != null) {
+                                                                    for (com.example.gallimart.SessionManager.CartItem item : order.items) {
+                                                                        locationList.add(new DriverLocation(
+                                                                                "Deliver: " + item.name + " (" + distKm + " km away)",
+                                                                                "To: " + order.buyerName
+                                                                        ));
+                                                                    }
+                                                                }
+
+                                                                adapter.setOrderContext(
+                                                                        orderSnap.getKey(),
+                                                                        "",
+                                                                        shopLat,
+                                                                        shopLng,
+                                                                        buyerLat,
+                                                                        buyerLng,
+                                                                        distKm
+                                                                );
+                                                                adapter.notifyDataSetChanged();
+
+                                                                Log.d(TAG, "Buyer coordinates fetched: " + buyerLat + ", " + buyerLng);
+                                                            }
+                                                        }
+
+                                                        @Override
+                                                        public void onCancelled(@NonNull DatabaseError error) {
+                                                            Log.e(TAG, "Buyer address fetch cancelled: " + error.getMessage());
+                                                        }
+                                                    });
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError error) {
+                                            Log.e(TAG, "Shop fetch cancelled: " + error.getMessage());
+                                        }
+                                    });
+                                }
                             }
 
-                            // create a simple display: "Shop - Buyer" (or item rows)
-                            Order order = orderSnap.getValue(Order.class);
-                            if (order != null && order.items != null) {
-                                for (com.example.gallimart.SessionManager.CartItem item : order.items) {
-                                    locationList.add(new DriverLocation("Deliver: " + item.name, "To: " + (order.buyerName != null ? order.buyerName : "Buyer")));
-                                }
-                            } else {
-                                // fallback listing
-                                locationList.add(new DriverLocation("Pickup: " + orderSnap.child("shopId").getValue(String.class),
-                                        "To: " + orderSnap.child("buyerId").getValue(String.class)));
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+                                Log.e(TAG, "Driver address fetch cancelled: " + error.getMessage());
                             }
-                        }
-                        adapter.notifyDataSetChanged();
+                        });
                     }
 
                     @Override
@@ -285,6 +348,8 @@ public class LocationFragment extends Fragment {
                     }
                 });
     }
+
+
 
 
 
@@ -336,6 +401,8 @@ public class LocationFragment extends Fragment {
                                 }
                             }
                             adapter.notifyDataSetChanged();
+                            Log.d("Data of driverStatus", "onBindViewHolder: " + driverStatus);
+
 
                             // load route (shop + buyer) and inform adapter of order context once lat/lng available
                             if (order != null) setupOrderRoute(order, driverStatus);
@@ -375,7 +442,21 @@ public class LocationFragment extends Fragment {
 
     // Setup order route now computes distance and passes it to the adapter
     private void setupOrderRoute(Order order, String driverStatus) {
-        if (order == null) return;
+        if (order == null) {
+            Log.e(TAG, "setupOrderRoute: order is null");
+            return;
+        }
+
+        // Check for null IDs to avoid crash
+        if (order.shopId == null || order.shopId.trim().isEmpty()) {
+            Log.e(TAG, "setupOrderRoute: shopId is null or empty for order " + assignedOrderId);
+            return;
+        }
+        if (order.buyerId == null || order.buyerId.trim().isEmpty()) {
+            Log.e(TAG, "setupOrderRoute: buyerId is null or empty for order " + assignedOrderId);
+            return;
+        }
+
         DatabaseReference shopRef = shopsRef.child(order.shopId);
         DatabaseReference buyerRef = usersRef.child(order.buyerId);
 
@@ -396,24 +477,36 @@ public class LocationFragment extends Fragment {
                             routeDistanceKm = calculateDistanceKm(currentShopLat, currentShopLng, currentBuyerLat, currentBuyerLng);
                         }
 
-                        // update adapter with order context + route distance
-                        adapter.setOrderContext(assignedOrderId, driverStatus, currentShopLat, currentShopLng, currentBuyerLat, currentBuyerLng, routeDistanceKm);
+                        adapter.setOrderContext(
+                                assignedOrderId,
+                                driverStatus,
+                                currentShopLat, currentShopLng,
+                                currentBuyerLat, currentBuyerLng,
+                                routeDistanceKm
+                        );
 
-                        // Display route if coordinates present
-                        if (currentShopLat != null && currentShopLng != null && currentBuyerLat != null && currentBuyerLng != null) {
+                        if (currentShopLat != null && currentShopLng != null &&
+                                currentBuyerLat != null && currentBuyerLng != null) {
                             showRouteOnMap(currentShopLat, currentShopLng, currentBuyerLat, currentBuyerLng);
+                        } else {
+                            Log.w(TAG, "Incomplete coordinates, route not drawn");
                         }
                     }
 
                     @Override
-                    public void onCancelled(@NonNull DatabaseError error) { Log.e(TAG, "Buyer fetch cancelled: " + error.getMessage()); }
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Buyer fetch cancelled: " + error.getMessage());
+                    }
                 });
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) { Log.e(TAG, "Shop fetch cancelled: " + error.getMessage()); }
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Shop fetch cancelled: " + error.getMessage());
+            }
         });
     }
+
 
 
     /** --- ACCEPT / REJECT ORDER (accept/reject take orderId param) --- **/
@@ -467,7 +560,16 @@ public class LocationFragment extends Fragment {
                 }
 
                 // successful claim: update driver node and UI
-                userRef.child("currentOrderId").setValue(orderId);
+                userRef.child("currentOrderId").setValue(orderId)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                userRef.child("available").setValue(false);
+                                ordersRef.child(orderId).child("driverStatus").setValue("ACCEPTED");
+                                ordersRef.child(orderId).child("driverId").setValue(driverId);
+                                listenForAssignedOrder(); // ✅ refresh assigned order
+                                Toast.makeText(getContext(), "Order Accepted", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                 userRef.child("available").setValue(false);
                 if (getActivity() != null)
                     getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Order Accepted", Toast.LENGTH_SHORT).show());
@@ -497,40 +599,34 @@ public class LocationFragment extends Fragment {
 
 
     // Improved openGoogleMaps: try google.navigation first, then geo fallback, then chooser
+    // ✅ Always open with Google Maps (if installed)
     private void openGoogleMaps(Double lat, Double lng) {
         if (lat == null || lng == null) {
             Toast.makeText(getContext(), "Destination not available", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String navUri = "google.navigation:q=" + lat + "," + lng;
-        Intent navIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(navUri));
-        navIntent.setPackage("com.google.android.apps.maps");
+        try {
+            // Direct Google Maps navigation intent
+            Uri gmmIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lng);
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+            mapIntent.setPackage("com.google.android.apps.maps");
 
-        if (navIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
-            startActivity(navIntent);
-            return;
-        }
+            // Try to open in Google Maps
+            if (mapIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
+                startActivity(mapIntent);
+            } else {
+                // Fallback: open in browser if Maps not installed
+                Uri webUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=" + lat + "," + lng);
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, webUri);
+                startActivity(browserIntent);
+            }
 
-        // Fallback: geo URI (more apps can handle this)
-        String geoUri = "geo:" + lat + "," + lng + "?q=" + lat + "," + lng + "(Destination)";
-        Intent geoIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(geoUri));
-
-        if (geoIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
-            startActivity(geoIntent);
-            return;
-        }
-
-        // Last fallback: show chooser for any app that can view plain map URLs
-        Intent httpIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/search/?api=1&query=" + lat + "," + lng));
-        List<ResolveInfo> apps = requireActivity().getPackageManager().queryIntentActivities(httpIntent, PackageManager.MATCH_DEFAULT_ONLY);
-        if (apps != null && !apps.isEmpty()) {
-            startActivity(Intent.createChooser(httpIntent, "Open with"));
-        } else {
-            Toast.makeText(getContext(), "No Maps application found", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error opening Google Maps", e);
+            Toast.makeText(getContext(), "Unable to open Google Maps", Toast.LENGTH_SHORT).show();
         }
     }
-
 
     /** --- PHOTO / CAPTURE --- **/
     private void captureDeliveryPhoto(String orderId) {
@@ -568,7 +664,9 @@ public class LocationFragment extends Fragment {
     private void markOrderDelivered(String orderId) {
         if (orderId == null) return;
         if (deliveryPhotoUri == null || pendingPhotoOrderId == null || !pendingPhotoOrderId.equals(orderId)) {
-            Toast.makeText(getContext(), "Upload a delivery photo first", Toast.LENGTH_SHORT).show();
+            if (isFragmentActive()) {
+                Toast.makeText(getContext(), "Upload a delivery photo first", Toast.LENGTH_SHORT).show();
+            }
             return;
         }
 
@@ -597,10 +695,11 @@ public class LocationFragment extends Fragment {
                 client.newCall(request).enqueue(new okhttp3.Callback() {
                     @Override
                     public void onFailure(@NonNull okhttp3.Call call, @NonNull IOException e) {
-                        if (getActivity() != null)
-                            getActivity().runOnUiThread(() ->
+                        if (isFragmentActive()) {
+                            requireActivity().runOnUiThread(() ->
                                     Toast.makeText(getContext(), "Photo upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                             );
+                        }
                     }
 
                     @Override
@@ -608,71 +707,94 @@ public class LocationFragment extends Fragment {
                         if (response.isSuccessful()) {
                             String publicUrl = supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;
 
-                            // Update Firebase: photo URL + status
-                            ordersRef.child(orderId).child("deliveryPhotoUrl").setValue(publicUrl);
-                            ordersRef.child(orderId).child("status").setValue("DELIVERED");
-                            ordersRef.child(orderId).child("driverStatus").setValue("DELIVERED");
-                            userRef.child("available").setValue(true);
-                            userRef.child("currentOrderId").removeValue();
-
-                            // Add completed order snapshot into driver's node for history
                             ordersRef.child(orderId).addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot orderSnap) {
-                                    if (orderSnap.exists()) {
-                                        userRef.child("completedOrders").child(orderId).setValue(orderSnap.getValue());
-                                    }
+                                    if (!orderSnap.exists() || !isFragmentActive()) return;
+
+                                    DatabaseReference completedRef = FirebaseDatabase.getInstance()
+                                            .getReference("completedOrders")
+                                            .child(orderId);
+
+                                    completedRef.setValue(orderSnap.getValue()).addOnCompleteListener(task -> {
+                                        if (task.isSuccessful()) {
+                                            completedRef.child("deliveryPhotoUrl").setValue(publicUrl);
+                                            completedRef.child("status").setValue("DELIVERED");
+                                            completedRef.child("driverStatus").setValue("DELIVERED");
+
+                                            // Copy to driver's completed orders
+                                            userRef.child("completedOrders").child(orderId).setValue(orderSnap.getValue());
+                                            userRef.child("completedOrders").child(orderId)
+                                                    .child("deliveryPhotoUrl").setValue(publicUrl);
+
+                                            // Remove from /orders/
+                                            ordersRef.child(orderId).removeValue();
+
+                                            // Free driver
+                                            userRef.child("available").setValue(true);
+                                            userRef.child("currentOrderId").removeValue();
+
+                                            if (isFragmentActive()) {
+                                                requireActivity().runOnUiThread(() -> {
+                                                    Toast.makeText(getContext(),
+                                                            "Order delivered & moved to completed orders!",
+                                                            Toast.LENGTH_SHORT).show();
+                                                    locationList.clear();
+                                                    adapter.clearOrderContext();
+                                                    adapter.notifyDataSetChanged();
+                                                });
+                                            }
+
+                                            pendingPhotoOrderId = null;
+                                            deliveryPhotoUri = null;
+                                        }
+                                    });
                                 }
 
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError error) {
-                                    Log.e(TAG, "Failed to copy completed order to driver node: " + error.getMessage());
+                                    Log.e(TAG, "Failed to move order to completed: " + error.getMessage());
                                 }
-                            });
-
-                            if (getActivity() != null)
-                                getActivity().runOnUiThread(() ->
-                                        Toast.makeText(getContext(), "Order delivered & photo uploaded!", Toast.LENGTH_SHORT).show()
-                                );
-
-                            // Clear local pending photo and UI
-                            pendingPhotoOrderId = null;
-                            deliveryPhotoUri = null;
-                            requireActivity().runOnUiThread(() -> {
-                                locationList.clear();
-                                adapter.clearOrderContext();
-                                adapter.notifyDataSetChanged();
                             });
 
                         } else {
                             String body = response.body() != null ? response.body().string() : "unknown";
                             Log.e(TAG, "Supabase upload error: " + body);
-                            if (getActivity() != null)
-                                getActivity().runOnUiThread(() ->
+                            if (isFragmentActive()) {
+                                requireActivity().runOnUiThread(() ->
                                         Toast.makeText(getContext(), "Photo upload failed", Toast.LENGTH_SHORT).show()
                                 );
+                            }
                         }
                     }
                 });
 
             } catch (Exception e) {
                 e.printStackTrace();
-                if (getActivity() != null)
-                    getActivity().runOnUiThread(() ->
+                if (isFragmentActive()) {
+                    requireActivity().runOnUiThread(() ->
                             Toast.makeText(getContext(), "Photo upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                     );
+                }
             }
         }).start();
     }
 
+    /** ✅ Helper method to safely check if Fragment is still attached **/
+    private boolean isFragmentActive() {
+        return isAdded() && getActivity() != null && !isRemoving() && !isDetached();
+    }
+
     /** --- ROUTE & MAP --- **/
     private void showRouteOnMap(double startLat, double startLng, double endLat, double endLng) {
-        if (mapView == null) return;
+        if (mapView == null || getActivity() == null || !isAdded()) return;
 
         GeoPoint startPoint = new GeoPoint(startLat, startLng);
         GeoPoint endPoint = new GeoPoint(endLat, endLng);
 
         requireActivity().runOnUiThread(() -> {
+            if (!isAdded()) return; // extra safety
+
             if (shopMarker != null) mapView.getOverlays().remove(shopMarker);
             if (buyerMarker != null) mapView.getOverlays().remove(buyerMarker);
             if (roadOverlay != null) mapView.getOverlays().remove(roadOverlay);
@@ -695,7 +817,7 @@ public class LocationFragment extends Fragment {
             mapView.invalidate();
         });
 
-        // fetch and draw route
+        // fetch and draw route safely in a background thread
         new Thread(() -> {
             try {
                 ArrayList<GeoPoint> waypoints = new ArrayList<>();
@@ -710,22 +832,23 @@ public class LocationFragment extends Fragment {
                     for (RoadNode node : road.mNodes) {
                         roadPoints.add(node.mLocation);
                     }
-                    Polyline newRoadOverlay = new Polyline(mapView);
-                    newRoadOverlay.setPoints(roadPoints);
-                    newRoadOverlay.setWidth(8f);
+
+                    if (getActivity() == null || !isAdded()) return; // ✅ check again before UI update
 
                     requireActivity().runOnUiThread(() -> {
-                        roadOverlay = newRoadOverlay;
+                        if (!isAdded()) return;
+
+                        roadOverlay = new Polyline(mapView);
+                        roadOverlay.setPoints(roadPoints);
+                        roadOverlay.setWidth(8f);
                         mapView.getOverlays().add(roadOverlay);
 
-                        // center and compute zoom
                         double midLat = (startLat + endLat) / 2.0;
                         double midLng = (startLng + endLng) / 2.0;
                         mapView.getController().setCenter(new GeoPoint(midLat, midLng));
 
                         double distanceKm = calculateDistanceKm(startLat, startLng, endLat, endLng);
                         mapView.getController().setZoom(distanceToZoom(distanceKm));
-
                         mapView.invalidate();
                     });
                 }
@@ -734,6 +857,7 @@ public class LocationFragment extends Fragment {
             }
         }).start();
     }
+
 
     private double distanceToZoom(double km) {
         if (km <= 0.2) return 17.0;

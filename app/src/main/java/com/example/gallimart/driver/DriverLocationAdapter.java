@@ -1,5 +1,6 @@
 package com.example.gallimart.driver;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -73,8 +74,8 @@ public class DriverLocationAdapter extends RecyclerView.Adapter<DriverLocationAd
 
         // Default hide everything if no order context
         if (orderId == null) {
-            holder.btnAccept.setVisibility(View.GONE);
-            holder.btnReject.setVisibility(View.GONE);
+            holder.btnAccept.setVisibility(View.VISIBLE);
+            holder.btnReject.setVisibility(View.VISIBLE);
             holder.btnUpload.setVisibility(View.GONE);
             holder.btnMarkDelivered.setVisibility(View.GONE);
             holder.btnDirections.setVisibility(View.GONE);
@@ -84,42 +85,44 @@ public class DriverLocationAdapter extends RecyclerView.Adapter<DriverLocationAd
         }
 
         // Show distance if available
-        if (routeDistanceKm > 0) {
+        if (routeDistanceKm != 0.0) {
             holder.tvDistance.setText(String.format("Approx: %.2f km", routeDistanceKm));
             holder.tvDistance.setVisibility(View.VISIBLE);
         } else {
             holder.tvDistance.setVisibility(View.GONE);
         }
 
+        Log.d("Data of driverStatus", "onBindViewHolder: " + driverStatus);
+
         // If driver has accepted -> show delivery actions, else show accept/reject
-        if ("ACCEPTED".equalsIgnoreCase(driverStatus)) {
+        if ("".equalsIgnoreCase(driverStatus)) {
+            // New orders available to accept/reject
+            holder.btnAccept.setVisibility(View.VISIBLE);
+            holder.btnReject.setVisibility(View.VISIBLE);
+            holder.btnUpload.setVisibility(View.GONE);
+            holder.btnMarkDelivered.setVisibility(View.GONE);
+            holder.btnDirections.setVisibility(View.GONE);
+            holder.btnShowRoute.setVisibility(View.GONE);
+        }
+        else if ("ACCEPTED".equalsIgnoreCase(driverStatus)) {
+            // Order accepted → show delivery buttons
             holder.btnAccept.setVisibility(View.GONE);
             holder.btnReject.setVisibility(View.GONE);
-
             holder.btnUpload.setVisibility(View.VISIBLE);
             holder.btnMarkDelivered.setVisibility(View.VISIBLE);
             holder.btnDirections.setVisibility(View.VISIBLE);
             holder.btnShowRoute.setVisibility(View.VISIBLE);
-        } else {
-            // if driverStatus exists and someone else accepted -> hide buttons & indicate accepted by someone else
-            if ("CONFIRMED".equalsIgnoreCase(driverStatus) && orderId != null) {
-                // shouldn't happen often because fragment clears, but safe guard
-                holder.btnAccept.setVisibility(View.GONE);
-                holder.btnReject.setVisibility(View.GONE);
-                holder.btnUpload.setVisibility(View.GONE);
-                holder.btnMarkDelivered.setVisibility(View.GONE);
-                holder.btnDirections.setVisibility(View.GONE);
-                holder.btnShowRoute.setVisibility(View.GONE);
-            } else {
-                holder.btnAccept.setVisibility(View.VISIBLE);
-                holder.btnReject.setVisibility(View.VISIBLE);
-
-                holder.btnUpload.setVisibility(View.GONE);
-                holder.btnMarkDelivered.setVisibility(View.GONE);
-                holder.btnDirections.setVisibility(View.GONE);
-                holder.btnShowRoute.setVisibility(View.GONE);
-            }
         }
+        else {
+            // Any other state → hide all
+            holder.btnAccept.setVisibility(View.GONE);
+            holder.btnReject.setVisibility(View.GONE);
+            holder.btnUpload.setVisibility(View.GONE);
+            holder.btnMarkDelivered.setVisibility(View.GONE);
+            holder.btnDirections.setVisibility(View.GONE);
+            holder.btnShowRoute.setVisibility(View.GONE);
+        }
+
 
         // Hook up clicks -> operate on orderId (all items belong to same order)
         holder.btnAccept.setOnClickListener(v -> listener.onAccept(orderId));

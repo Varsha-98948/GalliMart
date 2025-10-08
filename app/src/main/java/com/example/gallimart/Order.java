@@ -11,6 +11,7 @@ public class Order {
     public List<SessionManager.CartItem> items;
     public double totalAmount;
     public String status; // CONFIRMED, AWAITING_ACCEPTANCE, ACCEPTED, ASSIGNED_TO_DRIVER
+    public String driverStatus;
     public long timestamp;
 
     public Order() {
@@ -19,7 +20,7 @@ public class Order {
 
     public Order(String orderId, String buyerId, String buyerName, String shopId,
                  List<SessionManager.CartItem> items, double totalAmount,
-                 String status, long timestamp) {
+                 String status,String driverStatus, long timestamp) {
         this.orderId = orderId;
         this.buyerId = buyerId;
         this.buyerName = buyerName;
@@ -27,6 +28,7 @@ public class Order {
         this.items = items;
         this.totalAmount = totalAmount;
         this.status = status;
+        this.driverStatus = driverStatus;
         this.timestamp = timestamp;
     }
 }

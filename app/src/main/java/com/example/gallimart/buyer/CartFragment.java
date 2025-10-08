@@ -154,6 +154,7 @@ public class CartFragment extends Fragment {
                 new ArrayList<>(cartItems),
                 totalPrice,
                 "PLACED",
+                "",
                 System.currentTimeMillis()
         );
 
