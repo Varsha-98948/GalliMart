@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -64,10 +65,12 @@ public class LoginActivity extends AppCompatActivity {
         String password = etPassword.getText().toString().trim();
 
         if (TextUtils.isEmpty(email)) {
+            etEmail.startAnimation(AnimationUtils.loadAnimation(this, R.anim.shake));
             etEmail.setError("Enter email");
             return;
         }
         if (TextUtils.isEmpty(password)) {
+            etPassword.startAnimation(AnimationUtils.loadAnimation(this, R.anim.shake));
             etPassword.setError("Enter password");
             return;
         }
