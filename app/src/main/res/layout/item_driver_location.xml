@@ -17,7 +17,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Pickup Section -->
+        <!-- Pickup -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -42,7 +42,7 @@
                 android:textStyle="bold"/>
         </LinearLayout>
 
-        <!-- Delivery Section -->
+        <!-- Delivery -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -54,7 +54,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_home"
-                android:tint="@color/red"/>
+                app:tint="@color/red" />
 
             <TextView
                 android:id="@+id/tvDelivery"
@@ -67,24 +67,26 @@
                 android:textSize="14sp"/>
         </LinearLayout>
 
-        <!-- Optional distance/time info -->
+        <!-- Add this right after the Delivery LinearLayout -->
         <TextView
-            android:id="@+id/tvDistanceTime"
-            android:layout_width="wrap_content"
+            android:id="@+id/tvDistance"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="2.5 km • 10 min"
-            android:textSize="12sp"
+            android:text="Approx: 0.00 km"
+            android:textSize="13sp"
             android:textColor="@color/colorOnSurfaceVariant"
-            android:layout_marginTop="8dp"/>
+            android:layout_marginTop="6dp"
+            android:visibility="gone"/>
 
-        <!-- Action Buttons -->
+
+        <!-- Buttons row (per item) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="end"
             android:layout_marginTop="12dp"
-            android:weightSum="2">
+            android:weightSum="3">
 
             <Button
                 android:id="@+id/btnAccept"
@@ -92,9 +94,10 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Accept"
-                android:backgroundTint="@color/red"
-                android:textColor="@color/colorSurface"
-                android:layout_marginEnd="8dp"/>
+                android:visibility="gone"
+                android:backgroundTint="@color/colorPrimary"
+                android:textColor="@color/white"
+                android:layout_marginEnd="6dp"/>
 
             <Button
                 android:id="@+id/btnReject"
@@ -102,8 +105,62 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Reject"
+                android:visibility="gone"
                 android:backgroundTint="@color/red"
-                android:textColor="@color/colorSurface"/>
+                android:textColor="@color/white"
+                android:layout_marginEnd="6dp"/>
+
+            <Button
+                android:id="@+id/btnUploadPhotoItem"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Upload Photo"
+                android:visibility="gone"
+                android:backgroundTint="@color/dark_navy"
+                android:textColor="@color/white"/>
         </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="8dp"
+            android:weightSum="3">
+
+            <Button
+                android:id="@+id/btnMarkDeliveredItem"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Mark Delivered"
+                android:visibility="gone"
+                android:backgroundTint="@color/dark_navy"
+                android:textColor="@color/white"
+                android:layout_marginEnd="6dp"/>
+
+            <Button
+                android:id="@+id/btnDirectionsItem"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Directions"
+                android:visibility="gone"
+                android:backgroundTint="@color/colorPrimary"
+                android:textColor="@color/white"
+                android:layout_marginEnd="6dp"/>
+
+            <Button
+                android:id="@+id/btnShowRouteItem"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Show on Map"
+                android:visibility="gone"
+                android:backgroundTint="@color/teal_700"
+                android:textColor="@color/white"/>
+        </LinearLayout>
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

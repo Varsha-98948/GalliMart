@@ -169,8 +169,8 @@ public class OrdersFragment extends Fragment {
                 tvStatus.setText(order.status);
                 tvBuyer.setText(order.buyerName);
 
-                btnAccept.setOnClickListener(v -> updateOrderStatus(order, "ACCEPTED"));
-                btnReject.setOnClickListener(v -> updateOrderStatus(order, "REJECTED"));
+                btnAccept.setOnClickListener(v -> updateOrderStatus(order, "CONFIRMED"));
+                btnReject.setOnClickListener(v -> updateOrderStatus(order, "CANCELED"));
             }
         }
     }

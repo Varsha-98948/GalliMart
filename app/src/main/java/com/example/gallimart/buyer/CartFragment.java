@@ -153,7 +153,7 @@ public class CartFragment extends Fragment {
                 shopId,
                 new ArrayList<>(cartItems),
                 totalPrice,
-                "CONFIRMED",
+                "PLACED",
                 System.currentTimeMillis()
         );
 
