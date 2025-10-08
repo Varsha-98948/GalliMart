@@ -46,7 +46,7 @@ public class LoginActivity extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Logging in...");
 
-        // If already logged in, skip login screen
+        // Skip login if already logged in
         if (sessionManager.isLoggedIn()) {
             redirectToDashboard(sessionManager.getUserRole());
             finish();
@@ -64,16 +64,21 @@ public class LoginActivity extends AppCompatActivity {
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
+        // Validate inputs using setError()
         if (TextUtils.isEmpty(email)) {
             etEmail.startAnimation(AnimationUtils.loadAnimation(this, R.anim.shake));
-            etEmail.setError("Enter email");
+            etEmail.setError("Please enter your email");
+            etEmail.requestFocus();
             return;
         }
+
         if (TextUtils.isEmpty(password)) {
             etPassword.startAnimation(AnimationUtils.loadAnimation(this, R.anim.shake));
-            etPassword.setError("Enter password");
+            etPassword.setError("Please enter your password");
+            etPassword.requestFocus();
             return;
         }
+
 
         progressDialog.show();
 
@@ -81,9 +86,9 @@ public class LoginActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, task -> {
                     progressDialog.dismiss();
                     if (task.isSuccessful()) {
-                        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                        String uid = mAuth.getCurrentUser().getUid();
 
-                        // Fetch user data from /users/{uid}
+                        // Fetch user role from Firebase
                         FirebaseDatabase.getInstance().getReference()
                                 .child("users")
                                 .child(uid)
@@ -95,11 +100,11 @@ public class LoginActivity extends AppCompatActivity {
                                         String name = String.valueOf(snapshot.child("name").getValue());
                                         String emailFetched = mAuth.getCurrentUser().getEmail();
 
-                                        // Save session base info
+                                        // Save session
                                         sessionManager.createLoginSession(name, emailFetched, role);
 
                                         if ("Shopkeeper".equalsIgnoreCase(role)) {
-                                            // Fetch shopId for this shopkeeper
+                                            // Fetch shopId for shopkeeper
                                             FirebaseDatabase.getInstance().getReference()
                                                     .child("shops")
                                                     .get()
@@ -108,18 +113,15 @@ public class LoginActivity extends AppCompatActivity {
                                                             for (DataSnapshot shopSnapshot : taskShops.getResult().getChildren()) {
                                                                 String shopEmail = String.valueOf(shopSnapshot.child("email").getValue());
                                                                 if (emailFetched.equalsIgnoreCase(shopEmail)) {
-                                                                    String shopId = shopSnapshot.getKey();
-                                                                    sessionManager.setShopId(shopId);
+                                                                    sessionManager.setShopId(shopSnapshot.getKey());
                                                                     break;
                                                                 }
                                                             }
                                                         }
-                                                        // Redirect anyway (shopId stored if found)
                                                         redirectToDashboard(role);
                                                         finish();
                                                     });
                                         } else {
-                                            // For Buyer / Driver
                                             redirectToDashboard(role);
                                             finish();
                                         }
@@ -131,10 +133,9 @@ public class LoginActivity extends AppCompatActivity {
                                         finish();
                                     }
                                 });
-
                     } else {
                         Toast.makeText(LoginActivity.this,
-                                "Login failed: " + task.getException().getMessage(),
+                                "Login failed: Invalid Credentials",
                                 Toast.LENGTH_LONG).show();
                     }
                 });
@@ -150,4 +151,3 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 }
-

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Shop Location"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/dark_navy"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="8dp"/>
+
+    <org.osmdroid.views.MapView
+        android:id="@+id/dialogMapView"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:clipToOutline="true"
+        android:layout_marginBottom="8dp"/>
+
+</LinearLayout>

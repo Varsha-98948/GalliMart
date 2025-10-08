@@ -58,9 +58,6 @@ public class ShopkeeperDashboardActivity extends AppCompatActivity {
             } else if (id == R.id.nav_orders) {
                 selected = new OrdersFragment();
                 title = "Orders";
-            } else if (id == R.id.nav_returns) {
-                selected = new ReturnsFragment();
-                title = "Returns";
             }
 
             return loadFragment(selected, title, true);
