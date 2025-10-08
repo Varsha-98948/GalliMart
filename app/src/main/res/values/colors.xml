@@ -19,6 +19,7 @@
         <color name="primaryDark">#3700B3</color> <!-- purple 700 -->
         <color name="black">#000000</color>
     <color name="teal_700">#018786</color>
+    <color name="status_orange">#F57C00</color>
 
 
 </resources>

@@ -2,6 +2,7 @@ package com.example.gallimart.shopkeeper;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,11 +30,8 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 public class ProfileFragment extends Fragment {
 
@@ -42,6 +40,10 @@ public class ProfileFragment extends Fragment {
     private Button btnLogout;
     private MaterialCardView optionOrders, optionSaveLocation, optionHelp;
     private SessionManager sessionManager;
+
+    private MapView mapView;
+    private GeoPoint currentPoint;
+    private static final int LOCATION_PERMISSION_REQUEST = 1001;
 
     public ProfileFragment() {}
 
@@ -67,10 +69,20 @@ public class ProfileFragment extends Fragment {
 
         btnLogout = view.findViewById(R.id.btnLogoutShopkeeper);
 
+        // Initialize OSMDroid map
+        mapView = view.findViewById(R.id.mapShopLocation);
+        Configuration.getInstance().load(requireContext(),
+                android.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()));
+        mapView.setTileSource(TileSourceFactory.MAPNIK);
+        mapView.setMultiTouchControls(true);
+        mapView.getController().setZoom(16.0);
+
         loadUserDetails();
         runFadeInAnimations();
-
         setupClicks();
+
+        // Show existing shop location if already saved
+        showSavedShopLocation();
 
         return view;
     }
@@ -89,9 +101,20 @@ public class ProfileFragment extends Fragment {
         });
 
         optionOrders.setOnClickListener(v -> {
+            String shopId = sessionManager.getShopId();
+            if (shopId == null || shopId.isEmpty()) {
+                Toast.makeText(getContext(), "Save your shop location first!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            InventoryFragment inventoryFragment = new InventoryFragment();
+            Bundle bundle = new Bundle();
+            bundle.putString("shopId", shopId);
+            inventoryFragment.setArguments(bundle);
+
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragment_container, new OrdersFragment())
+                    .replace(R.id.fragment_container, inventoryFragment)
                     .addToBackStack(null)
                     .commit();
         });
@@ -104,7 +127,7 @@ public class ProfileFragment extends Fragment {
                     .show();
         });
 
-        optionSaveLocation.setOnClickListener(v -> showShopLocationDialog());
+        optionSaveLocation.setOnClickListener(v -> saveCurrentLocation());
     }
 
     private void runFadeInAnimations() {
@@ -127,53 +150,82 @@ public class ProfileFragment extends Fragment {
         view.setVisibility(View.VISIBLE);
     }
 
-    private void showShopLocationDialog() {
-        String shopId = sessionManager.getShopId();
-        if (shopId == null || shopId.isEmpty()) {
-            Toast.makeText(getContext(), "No shop location saved yet.", Toast.LENGTH_SHORT).show();
+    // ==================== LOCATION HANDLING ====================
+    private void saveCurrentLocation() {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(requireActivity(),
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST);
             return;
         }
 
+        android.location.LocationManager lm = (android.location.LocationManager) requireContext().getSystemService(android.content.Context.LOCATION_SERVICE);
+        Location location = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER);
+
+        if (location != null) {
+            currentPoint = new GeoPoint(location.getLatitude(), location.getLongitude());
+            saveShopLocation(currentPoint.getLatitude(), currentPoint.getLongitude());
+            updateMapMarker(currentPoint);
+        } else {
+            Toast.makeText(getContext(), "Unable to get current location. Try again.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void saveShopLocation(double lat, double lng) {
+        String shopId = sessionManager.getShopId();
+        if (shopId == null || shopId.isEmpty()) {
+            shopId = FirebaseDatabase.getInstance().getReference("shops").push().getKey();
+            sessionManager.setShopId(shopId);
+        }
+
         DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference("shops").child(shopId);
-        shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+        shopRef.child("lat").setValue(lat);
+        shopRef.child("lng").setValue(lng);
+        shopRef.child("shopId").setValue(shopId);
+        shopRef.child("name").setValue(sessionManager.getUserName());
+        shopRef.child("email").setValue(sessionManager.getUserEmail());
+
+        Toast.makeText(getContext(), "Shop location saved!", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showSavedShopLocation() {
+        String shopId = sessionManager.getShopId();
+        if (shopId != null && !shopId.isEmpty()) {
+            DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference("shops").child(shopId);
+            shopRef.get().addOnSuccessListener(snapshot -> {
                 Double lat = snapshot.child("lat").getValue(Double.class);
                 Double lng = snapshot.child("lng").getValue(Double.class);
-
-                if (lat == null || lng == null) {
-                    Toast.makeText(getContext(), "Shop location not found.", Toast.LENGTH_SHORT).show();
-                    return;
+                if (lat != null && lng != null) {
+                    GeoPoint point = new GeoPoint(lat, lng);
+                    updateMapMarker(point);
                 }
+            });
+        }
+    }
 
-                // Inflate map dialog
-                View mapDialogView = getLayoutInflater().inflate(R.layout.dialog_map, null);
-                MapView mapView = mapDialogView.findViewById(R.id.dialogMapView);
+    private void updateMapMarker(GeoPoint point) {
+        mapView.getOverlays().clear();
+        Marker marker = new Marker(mapView);
+        marker.setPosition(point);
+        marker.setTitle("Your Shop");
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        mapView.getOverlays().add(marker);
+        mapView.getController().setCenter(point);
+        mapView.invalidate();
+    }
 
-                Configuration.getInstance().load(requireContext(),
-                        android.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()));
-                mapView.setTileSource(TileSourceFactory.MAPNIK);
-                mapView.setMultiTouchControls(true);
-                mapView.getController().setZoom(16.0);
-
-                GeoPoint shopPoint = new GeoPoint(lat, lng);
-                Marker marker = new Marker(mapView);
-                marker.setPosition(shopPoint);
-                marker.setTitle("Your Shop");
-                mapView.getOverlays().add(marker);
-                mapView.getController().setCenter(shopPoint);
-
-                new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                        .setTitle("Shop Location")
-                        .setView(mapDialogView)
-                        .setPositiveButton("OK", null)
-                        .show();
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                saveCurrentLocation();
+            } else {
+                Toast.makeText(getContext(), "Location permission denied.", Toast.LENGTH_SHORT).show();
             }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(getContext(), "Failed to fetch shop location.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        }
     }
 }

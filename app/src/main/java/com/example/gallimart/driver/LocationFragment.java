@@ -1,3 +1,4 @@
+
 package com.example.gallimart.driver;
 
 import android.Manifest;
@@ -976,5 +977,3 @@ public class LocationFragment extends Fragment {
         }
     }
 }
-
-

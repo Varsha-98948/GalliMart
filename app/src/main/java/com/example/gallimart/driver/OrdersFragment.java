@@ -58,7 +58,6 @@ public class OrdersFragment extends Fragment {
         String driverId = user.getUid();
         DatabaseReference db = FirebaseDatabase.getInstance().getReference();
 
-        // Fetch all shops once
         db.child("shops").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -95,9 +94,7 @@ public class OrdersFragment extends Fragment {
                             if (order != null) orderList.add(order);
                         }
 
-                        // Sort by timestamp descending
                         Collections.sort(orderList, (o1, o2) -> Long.compare(o2.timestamp, o1.timestamp));
-
                         adapter.notifyDataSetChanged();
                     }
 
@@ -132,16 +129,15 @@ public class OrdersFragment extends Fragment {
         return new Order(orderId, status, route, timestamp, earnings);
     }
 
-    // Haversine formula
     private double calculateDistance(double lat1, double lng1, double lat2, double lng2) {
-        final int R = 6371; // Earth radius in km
+        final int R = 6371;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLng = Math.toRadians(lng2 - lng1);
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                 Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
                         Math.sin(dLng / 2) * Math.sin(dLng / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c; // in km
+        return R * c;
     }
 
     private String calculateEarnings(double distanceKm) {
@@ -151,35 +147,22 @@ public class OrdersFragment extends Fragment {
         else return "₹0";
     }
 
-    // Models
     public static class Shop {
         String name;
         double lat, lng;
-
-        public Shop(String name, double lat, double lng) {
-            this.name = name;
-            this.lat = lat;
-            this.lng = lng;
-        }
+        public Shop(String name, double lat, double lng) { this.name = name; this.lat = lat; this.lng = lng; }
     }
 
     public static class Order {
         String id, status, route, earnings;
         long timestamp;
-
         public Order(String id, String status, String route, long timestamp, String earnings) {
-            this.id = id;
-            this.status = status;
-            this.route = route;
-            this.timestamp = timestamp;
-            this.earnings = earnings;
+            this.id = id; this.status = status; this.route = route; this.timestamp = timestamp; this.earnings = earnings;
         }
     }
 
-    // Adapter
     public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.OrderViewHolder> {
         private final List<Order> orders;
-
         public OrdersAdapter(List<Order> orders) { this.orders = orders; }
 
         @NonNull
@@ -193,6 +176,12 @@ public class OrdersFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
             holder.bind(orders.get(position));
+            holder.itemView.setAlpha(0f);
+            holder.itemView.animate()
+                    .alpha(1f)
+                    .setDuration(400)
+                    .setStartDelay(position * 100)
+                    .start();
         }
 
         @Override
@@ -200,7 +189,6 @@ public class OrdersFragment extends Fragment {
 
         class OrderViewHolder extends RecyclerView.ViewHolder {
             TextView tvOrderId, tvStatus, tvRoute, tvEarnings;
-
             public OrderViewHolder(@NonNull View itemView) {
                 super(itemView);
                 tvOrderId = itemView.findViewById(R.id.tvOrderId);
@@ -211,9 +199,24 @@ public class OrdersFragment extends Fragment {
 
             void bind(Order order) {
                 tvOrderId.setText(order.id);
-                tvStatus.setText(order.status);
                 tvRoute.setText(order.route);
                 tvEarnings.setText(order.earnings);
+
+                tvStatus.setText(order.status);
+                switch (order.status) {
+                    case "IN PROGRESS":
+                        tvStatus.setTextColor(getResources().getColor(R.color.status_orange));
+                        break;
+                    case "DELIVERED":
+                        tvStatus.setTextColor(getResources().getColor(R.color.green));
+                        break;
+                    case "CANCELLED":
+                    case "FAILED":
+                        tvStatus.setTextColor(getResources().getColor(R.color.red));
+                        break;
+                    default:
+                        tvStatus.setTextColor(getResources().getColor(R.color.dark_navy));
+                }
             }
         }
     }

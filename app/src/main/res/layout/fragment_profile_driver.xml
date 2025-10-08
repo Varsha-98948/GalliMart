@@ -1,117 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorBackground">
+    android:background="#F5F5F5"
+    android:fillViewport="true"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:padding="24dp"
         android:gravity="center_horizontal">
 
-        <!-- Profile Picture -->
+        <!-- Profile Image -->
         <ImageView
             android:id="@+id/ivProfileDriver"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:src="@drawable/ic_profile_placeholder"
+            android:background="@drawable/profile_placeholder_bg"
+            android:padding="12dp"
+            android:contentDescription="Driver Profile Picture"
+            android:layout_marginBottom="16dp"
+            app:tint="#202A44"
             android:scaleType="centerCrop"
-            android:layout_marginTop="16dp"
-            android:contentDescription="Driver Profile Picture" />
+            android:clipToOutline="true"/>
 
         <!-- Name -->
         <TextView
             android:id="@+id/tvNameDriver"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="22sp"
+            android:text="Driver Name"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="@color/colorOnSurface"
-            android:layout_marginTop="12dp"
-            android:text="John Doe"/>
+            android:textColor="#202A44"
+            android:layout_marginBottom="4dp"/>
 
         <!-- Email -->
         <TextView
             android:id="@+id/tvEmailDriver"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textColor="@color/colorOnSurfaceVariant"
-            android:layout_marginTop="4dp"
-            android:text="johndoe@example.com"/>
+            android:text="email@example.com"
+            android:textSize="14sp"
+            android:textColor="#202A44"
+            android:layout_marginBottom="4dp"/>
 
         <!-- Role -->
         <TextView
             android:id="@+id/tvRoleDriver"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Driver"
             android:textSize="14sp"
-            android:textColor="@color/colorOnSurfaceVariant"
-            android:layout_marginTop="2dp"
-            android:text="Driver"/>
+            android:textColor="#7A7A7A"
+            android:layout_marginBottom="24dp"/>
 
         <!-- Divider -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/colorSurfaceVariant"
-            android:layout_marginVertical="16dp"/>
+            android:background="#E0E0E0"
+            android:layout_marginBottom="24dp"/>
 
-        <!-- Options (if needed, else leave empty or remove) -->
-        <LinearLayout
-            android:id="@+id/driverOptions"
-            android:orientation="vertical"
+        <!-- Delivery History Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardDeliveryHistory"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:elevation="6dp"
+            app:cardCornerRadius="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
-            <!-- Example: Delivery History -->
             <LinearLayout
-                android:id="@+id/optionDeliveryHistory"
-                android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:padding="16dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground">
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_orders"
+                    android:contentDescription="Delivery History"
+                    app:tint="#202A44"/>
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Delivery History"
-                    android:textColor="@color/colorOnSurface"
-                    android:textSize="16sp"/>
+                    android:textSize="16sp"
+                    android:textColor="#202A44"
+                    android:layout_marginStart="16dp"/>
             </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-            <!-- Example: Help -->
+        <!-- Help Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardHelpDriver"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:elevation="6dp"
+            app:cardCornerRadius="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
             <LinearLayout
-                android:id="@+id/optionHelpDriver"
-                android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:padding="16dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground">
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_help"
+                    android:contentDescription="Help"
+                    app:tint="#202A44"/>
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Help"
-                    android:textColor="@color/colorOnSurface"
-                    android:textSize="16sp"/>
+                    android:textSize="16sp"
+                    android:textColor="#202A44"
+                    android:layout_marginStart="16dp"/>
             </LinearLayout>
-
-        </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <!-- Logout Button -->
-        <androidx.appcompat.widget.AppCompatButton
+        <Button
             android:id="@+id/btnLogoutDriver"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Logout"
-            android:layout_marginTop="24dp"
+            android:textColor="@android:color/white"
             android:backgroundTint="@color/red"
-            android:textColor="@color/colorSurface"/>
-
+            android:padding="12dp"
+            android:elevation="4dp"/>
     </LinearLayout>
 </ScrollView>

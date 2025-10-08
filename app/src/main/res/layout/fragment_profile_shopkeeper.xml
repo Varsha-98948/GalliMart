@@ -63,6 +63,13 @@
             android:background="#E0E0E0"
             android:layout_marginBottom="24dp"/>
 
+        <!-- Map View for Shop Location -->
+        <org.osmdroid.views.MapView
+            android:id="@+id/mapShopLocation"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginBottom="24dp"/>
+
         <!-- Option: My Orders -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/optionOrdersShopkeeper"

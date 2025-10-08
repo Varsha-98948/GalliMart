@@ -5,16 +5,20 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="6dp"
-    android:foreground="?attr/selectableItemBackground">
+    app:cardElevation="8dp"
+    android:foreground="?attr/selectableItemBackground"
+    android:backgroundTint="@color/white"
+    app:cardPreventCornerOverlap="false"
+    app:cardUseCompatPadding="true"
+    app:strokeColor="@color/dark_navy"
+    app:strokeWidth="3dp">
 
     <LinearLayout
         android:orientation="vertical"
-        android:padding="16dp"
+        android:padding="20dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Order Info -->
         <TextView
             android:id="@+id/tvOrderId"
             android:layout_width="wrap_content"
@@ -31,7 +35,8 @@
             android:text="Status: Pending"
             android:textSize="14sp"
             android:layout_marginTop="4dp"
-            android:textColor="@color/dark_navy"/>
+            android:textColor="@color/status_orange"
+            android:textStyle="bold"/>
 
         <TextView
             android:id="@+id/tvOrderRoute"
@@ -42,24 +47,14 @@
             android:layout_marginTop="4dp"
             android:textColor="@color/dark_navy"/>
 
-        <!-- Buttons Row -->
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tvOrderEarnings"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Earnings: ₹40"
+            android:textSize="14sp"
             android:layout_marginTop="12dp"
-            android:weightSum="2">
-
-            <TextView
-                android:id="@+id/tvOrderEarnings"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Earnings: ₹40"
-                android:textSize="14sp"
-                android:textColor="#388E3C"
-                android:textStyle="bold"/>
-
-        </LinearLayout>
-
+            android:textColor="@color/green"
+            android:textStyle="bold"/>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
