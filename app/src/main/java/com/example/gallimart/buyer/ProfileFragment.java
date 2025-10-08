@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -21,8 +22,8 @@ public class ProfileFragment extends Fragment {
 
     private ImageView ivProfile;
     private TextView tvName, tvEmail, tvRole;
-    private LinearLayout optionOrders, optionAddress, optionPayment, optionHelp, optionSettings;
-    private androidx.appcompat.widget.AppCompatButton btnLogout;
+    private LinearLayout optionOrders, optionHelp;
+    private Button btnLogout;
     private SessionManager sessionManager;
 
     public ProfileFragment() {}
@@ -32,6 +33,7 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
         sessionManager = new SessionManager(getContext());
@@ -42,11 +44,7 @@ public class ProfileFragment extends Fragment {
         tvRole = view.findViewById(R.id.tvRole);
 
         optionOrders = view.findViewById(R.id.optionOrders);
-        optionAddress = view.findViewById(R.id.optionAddress);
-        optionPayment = view.findViewById(R.id.optionPayment);
         optionHelp = view.findViewById(R.id.optionHelp);
-        optionSettings = view.findViewById(R.id.optionSettings);
-
         btnLogout = view.findViewById(R.id.btnLogout);
 
         loadUserDetails();
@@ -65,23 +63,21 @@ public class ProfileFragment extends Fragment {
 
     private void setupOptionClicks() {
         optionOrders.setOnClickListener(v -> {
-            // Navigate to Orders Fragment / Activity
-        });
-
-        optionAddress.setOnClickListener(v -> {
-            // Navigate to Address Fragment / Activity
-        });
-
-        optionPayment.setOnClickListener(v -> {
-            // Navigate to Payment Methods
+            getParentFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new BuyerOrdersFragment())
+                    .addToBackStack(null)
+                    .commit();
         });
 
         optionHelp.setOnClickListener(v -> {
-            // Navigate to Help / FAQ
-        });
-
-        optionSettings.setOnClickListener(v -> {
-            // Navigate to Settings
+            String email = "gallimart.contact@gmail.com";
+            Intent emailIntent = new Intent(Intent.ACTION_SEND);
+            emailIntent.setType("message/rfc822");
+            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email});
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Gallimart Support");
+            emailIntent.putExtra(Intent.EXTRA_TEXT, "Hello Gallimart team,");
+            startActivity(Intent.createChooser(emailIntent, "Send Email"));
         });
     }
 
@@ -101,14 +97,12 @@ public class ProfileFragment extends Fragment {
         fadeIn(tvEmail, delay + 400);
         fadeIn(tvRole, delay + 600);
         fadeIn(optionOrders, delay + 800);
-        fadeIn(optionAddress, delay + 1000);
-        fadeIn(optionPayment, delay + 1200);
-        fadeIn(optionHelp, delay + 1400);
-        fadeIn(optionSettings, delay + 1600);
-        fadeIn(btnLogout, delay + 1800);
+        fadeIn(optionHelp, delay + 1000);
+        fadeIn(btnLogout, delay + 1200);
     }
 
     private void fadeIn(View view, int delay) {
+        if (view == null) return;
         view.setAlpha(0f);
         view.animate()
                 .alpha(1f)

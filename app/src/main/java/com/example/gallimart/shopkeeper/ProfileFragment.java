@@ -1,7 +1,6 @@
 package com.example.gallimart.shopkeeper;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,6 +9,7 @@ import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,8 +23,7 @@ import com.example.gallimart.SessionManager;
 import com.example.gallimart.login.LoginActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.android.material.card.MaterialCardView;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
@@ -32,125 +31,150 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 public class ProfileFragment extends Fragment {
 
+    private ImageView ivProfile;
     private TextView tvName, tvEmail, tvRole;
-    private Button btnLogout, btnSaveLocation;
+    private Button btnLogout;
+    private MaterialCardView optionOrders, optionSaveLocation, optionHelp;
     private SessionManager sessionManager;
-    private MapView mapView;
-    private GeoPoint currentPoint;
+
+    private DatabaseReference shopRef;
+
+    public ProfileFragment() {}
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_profile_shopkeeper, container, false);
 
         sessionManager = new SessionManager(getContext());
 
+        ivProfile = view.findViewById(R.id.ivProfile);
         tvName = view.findViewById(R.id.tvNameShopkeeper);
         tvEmail = view.findViewById(R.id.tvEmailShopkeeper);
         tvRole = view.findViewById(R.id.tvRoleShopkeeper);
+
+        optionOrders = view.findViewById(R.id.optionOrdersShopkeeper);
+        optionSaveLocation = view.findViewById(R.id.optionSaveLocationShopkeeper);
+        optionHelp = view.findViewById(R.id.optionHelpShopkeeper);
+
         btnLogout = view.findViewById(R.id.btnLogoutShopkeeper);
-        btnSaveLocation = view.findViewById(R.id.btnSaveLocationShopkeeper);
-        mapView = view.findViewById(R.id.mapShopLocation);
 
-        tvName.setText(sessionManager.getUserName());
-        tvEmail.setText(sessionManager.getUserEmail());
-        tvRole.setText("Shopkeeper");
+        loadUserDetails();
+        runFadeInAnimations(view);
 
-        // Fade-in animation for profile info
-        fadeInView(tvName);
-        fadeInView(tvEmail);
-        fadeInView(tvRole);
-        fadeInView(btnLogout);
-        fadeInView(btnSaveLocation);
-        fadeInView(mapView);
-
-        btnLogout.setOnClickListener(v -> {
-            sessionManager.logout(true);
-            startActivity(new Intent(getContext(), LoginActivity.class));
-            requireActivity().finish();
-        });
-
-        // OSMDroid setup
-        Configuration.getInstance().load(requireContext(),
-                android.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()));
-
-        mapView.setTileSource(TileSourceFactory.MAPNIK);
-        mapView.setMultiTouchControls(true);
-        mapView.getController().setZoom(16.0);
-
-        // Marker for shop
-        Marker shopMarker = new Marker(mapView);
-        shopMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        mapView.getOverlays().add(shopMarker);
-
-        // Location permission & FusedLocationProviderClient
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(),
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 101);
-        } else {
-            FusedLocationProviderClient fusedClient =
-                    LocationServices.getFusedLocationProviderClient(requireContext());
-            fusedClient.getLastLocation().addOnSuccessListener(location -> {
-                if (location != null) {
-                    currentPoint = new GeoPoint(location.getLatitude(), location.getLongitude());
-                    mapView.getController().setCenter(currentPoint);
-                    shopMarker.setPosition(currentPoint);
-                    shopMarker.setTitle("Your shop here");
-                    mapView.invalidate();
-                }
-            });
-        }
-
-        btnSaveLocation.setOnClickListener(v -> saveShopLocation());
+        setupClicks();
 
         return view;
     }
 
-    private void fadeInView(View view) {
-        Animation fadeIn = new AlphaAnimation(0, 1);
-        fadeIn.setDuration(800);
+    private void loadUserDetails() {
+        tvName.setText(sessionManager.getUserName());
+        tvEmail.setText(sessionManager.getUserEmail());
+        tvRole.setText("Shopkeeper");
+    }
+
+    private void setupClicks() {
+        btnLogout.setOnClickListener(v -> {
+            sessionManager.logout(true);
+            startActivity(new android.content.Intent(getContext(), LoginActivity.class));
+            requireActivity().finish();
+        });
+
+        optionOrders.setOnClickListener(v -> {
+            // Navigate to ShopkeeperOrdersFragment
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new OrdersFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+
+        optionHelp.setOnClickListener(v -> {
+            // Show help dialog
+            androidx.appcompat.app.AlertDialog.Builder builder =
+                    new androidx.appcompat.app.AlertDialog.Builder(requireContext());
+            builder.setTitle("Help & Support")
+                    .setMessage("Contact us at:\ngallimart.contact@gmail.com")
+                    .setPositiveButton("OK", null)
+                    .show();
+        });
+
+        optionSaveLocation.setOnClickListener(v -> showShopLocationDialog());
+    }
+
+    private void runFadeInAnimations(View root) {
+        int delay = 100;
+        fadeInView(ivProfile, delay);
+        fadeInView(tvName, delay + 200);
+        fadeInView(tvEmail, delay + 400);
+        fadeInView(tvRole, delay + 600);
+        fadeInView(optionOrders, delay + 800);
+        fadeInView(optionSaveLocation, delay + 1000);
+        fadeInView(optionHelp, delay + 1200);
+        fadeInView(btnLogout, delay + 1400);
+    }
+
+    private void fadeInView(View view, int delay) {
+        Animation fadeIn = new AlphaAnimation(0f, 1f);
+        fadeIn.setStartOffset(delay);
+        fadeIn.setDuration(400);
         view.startAnimation(fadeIn);
         view.setVisibility(View.VISIBLE);
     }
 
-    private void saveShopLocation() {
-        if (currentPoint != null) {
-            String shopId = sessionManager.getShopId();
+    private void showShopLocationDialog() {
+        String shopId = sessionManager.getShopId();
+        if (shopId == null || shopId.isEmpty()) {
+            Toast.makeText(getContext(), "No shop location saved yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            if (shopId == null || shopId.isEmpty()) {
-                shopId = FirebaseDatabase.getInstance().getReference("shops").push().getKey();
-                sessionManager.setShopId(shopId);
+        shopRef = FirebaseDatabase.getInstance().getReference("shops").child(shopId);
+        shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Double lat = snapshot.child("lat").getValue(Double.class);
+                Double lng = snapshot.child("lng").getValue(Double.class);
+
+                if (lat == null || lng == null) {
+                    Toast.makeText(getContext(), "Shop location not found.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Show dialog with OSMDroid MapView
+                androidx.appcompat.app.AlertDialog.Builder builder =
+                        new androidx.appcompat.app.AlertDialog.Builder(requireContext());
+                View mapViewDialog = getLayoutInflater().inflate(R.layout.dialog_map, null);
+                MapView map = mapViewDialog.findViewById(R.id.dialogMapView);
+                map.setTileSource(TileSourceFactory.MAPNIK);
+                map.setMultiTouchControls(true);
+                map.getController().setZoom(16.0);
+                GeoPoint point = new GeoPoint(lat, lng);
+
+                Marker marker = new Marker(map);
+                marker.setPosition(point);
+                marker.setTitle("Your Shop");
+                map.getOverlays().add(marker);
+                map.getController().setCenter(point);
+
+                builder.setView(mapViewDialog)
+                        .setPositiveButton("OK", null)
+                        .show();
             }
 
-            DatabaseReference shopRef = FirebaseDatabase.getInstance()
-                    .getReference("shops")
-                    .child(shopId);
-
-            shopRef.child("name").setValue(sessionManager.getUserName());
-            shopRef.child("email").setValue(sessionManager.getUserEmail());
-            shopRef.child("lat").setValue(currentPoint.getLatitude());
-            shopRef.child("lng").setValue(currentPoint.getLongitude());
-            shopRef.child("shopId").setValue(shopId);
-
-            Toast.makeText(getContext(), "Shop location saved!", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getContext(), "Unable to get current location", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        mapView.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        mapView.onPause();
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
     }
 }

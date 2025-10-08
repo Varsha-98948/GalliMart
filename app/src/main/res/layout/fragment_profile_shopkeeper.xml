@@ -2,138 +2,135 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="16dp">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:gravity="center_horizontal">
 
+        <!-- Default Profile Icon -->
+        <ImageView
+            android:id="@+id/ivProfile"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/ic_profile_placeholder"
+            android:background="@drawable/profile_placeholder_bg"
+            android:padding="12dp"
+            android:contentDescription="Profile Image"
+            android:layout_marginBottom="16dp"
+            app:tint="#202A44"
+            />
+
         <!-- Name -->
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tvNameShopkeeper"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:background="@android:color/white"
-            android:elevation="4dp"
-            android:layout_marginBottom="8dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
-
-            <TextView
-                android:text="Name:"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <TextView
-                android:id="@+id/tvNameShopkeeper"
-                android:textSize="16sp"
-                android:layout_marginStart="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/dark_navy"
+            android:layout_marginBottom="4dp"/>
 
         <!-- Email -->
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tvEmailShopkeeper"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:background="@android:color/white"
-            android:elevation="4dp"
-            android:layout_marginBottom="8dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
-
-            <TextView
-                android:text="Email:"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <TextView
-                android:id="@+id/tvEmailShopkeeper"
-                android:textSize="16sp"
-                android:layout_marginStart="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
+            android:textSize="16sp"
+            android:textColor="@color/colorOnSurfaceVariant"
+            android:layout_marginBottom="4dp"/>
 
         <!-- Role -->
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tvRoleShopkeeper"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:background="@android:color/white"
-            android:elevation="4dp"
-            android:layout_marginBottom="12dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
+            android:textSize="16sp"
+            android:textColor="@color/red"
+            android:layout_marginBottom="16dp"/>
 
-            <TextView
-                android:text="Role:"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <TextView
-                android:id="@+id/tvRoleShopkeeper"
-                android:textSize="16sp"
-                android:layout_marginStart="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
-
-        <!-- Buttons -->
-        <Button
-            android:id="@+id/btnLogoutShopkeeper"
-            android:text="Logout"
+        <!-- Orders Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/optionOrdersShopkeeper"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="My Orders"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/dark_navy"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Save Shop Location Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/optionSaveLocationShopkeeper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View Shop Location"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/dark_navy"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Help Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/optionHelpShopkeeper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Help"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/dark_navy"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Logout Button -->
+        <Button
+            android:id="@+id/btnLogoutShopkeeper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Logout"
             android:backgroundTint="@color/red"
             android:textColor="@android:color/white"/>
-
-        <Button
-            android:id="@+id/btnSaveLocationShopkeeper"
-            android:text="Save Shop Location"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:backgroundTint="@color/dark_navy"
-            android:textColor="@android:color/white"/>
-
-        <!-- Map -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
-            android:elevation="4dp"
-            android:padding="8dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:text="Shop Location"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"/>
-
-            <org.osmdroid.views.MapView
-                android:id="@+id/mapShopLocation"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginBottom="4dp"
-                android:clipToOutline="true"/>
-        </LinearLayout>
-
     </LinearLayout>
 </ScrollView>
